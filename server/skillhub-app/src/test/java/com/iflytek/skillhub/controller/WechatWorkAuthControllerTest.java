@@ -63,12 +63,13 @@ class WechatWorkAuthControllerTest {
 
     @Test
     void callback_redirectsToLoginWhenWechatWorkAuthFails() throws Exception {
-        given(loginFlowService.completeCallback(any(), eq("state-2"), eq("code-2")))
-                .willThrow(new WechatWorkAuthException("callback failed"));
+        String sensitiveCode = "code-sensitive-20260530";
+        given(loginFlowService.completeCallback(any(), eq("state-2"), eq(sensitiveCode)))
+                .willThrow(new WechatWorkAuthException("Failed to request WechatWork user info"));
 
         mockMvc.perform(get("/api/v1/auth/wechatwork/callback")
                         .param("state", "state-2")
-                        .param("code", "code-2"))
+                        .param("code", sensitiveCode))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", "/login?reason=ssoFailed"));
     }

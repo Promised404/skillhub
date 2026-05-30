@@ -35,9 +35,6 @@ class WechatWorkLoginFlowServiceTest {
                 mock(PlatformSessionService.class)
         );
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setScheme("https");
-        request.setServerName("fr24.internal");
-        request.setServerPort(8443);
 
         String redirect = service.buildAuthorizationRedirect(request, " /dashboard/review ");
 
@@ -55,7 +52,7 @@ class WechatWorkLoginFlowServiceTest {
         assertThat(queryParams.getFirst("agentid")).isEqualTo("100001");
         assertThat(queryParams.getFirst("state")).isEqualTo(state);
         assertThat(queryParams.getFirst("redirect_uri"))
-                .isEqualTo("https://fr24.internal:8443/api/v1/auth/wechatwork/callback");
+                .isEqualTo("https://login.fr24.example/api/v1/auth/wechatwork/callback");
     }
 
     @Test
@@ -78,6 +75,23 @@ class WechatWorkLoginFlowServiceTest {
         var queryParams = UriComponentsBuilder.fromUriString(redirect).build(true).getQueryParams();
         assertThat(queryParams.getFirst("redirect_uri"))
                 .isEqualTo("https://login.example.com/api/v1/auth/wechatwork/callback");
+    }
+
+    @Test
+    void buildAuthorizationRedirect_rejectsMissingCallbackBaseUrl() {
+        WechatWorkAuthProperties properties = enabledProperties();
+        properties.setCallbackBaseUrl(" ");
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                properties,
+                mock(WechatWorkApiClient.class),
+                mock(IdentityBindingService.class),
+                mock(PlatformSessionService.class)
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        assertThatThrownBy(() -> service.buildAuthorizationRedirect(request, "/dashboard"))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("WechatWork callback base URL is required");
     }
 
     @Test
@@ -148,7 +162,7 @@ class WechatWorkLoginFlowServiceTest {
     }
 
     @Test
-    void completeCallback_rejectsMissingCodeWithoutLeakingInput() {
+    void completeCallback_rejectsMissingCode() {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
@@ -163,10 +177,67 @@ class WechatWorkLoginFlowServiceTest {
 
         assertThatThrownBy(() -> service.completeCallback(request, "state-3", " "))
                 .isInstanceOf(WechatWorkAuthException.class)
-                .hasMessage("WechatWork callback code is missing")
-                .hasMessageNotContaining("sensitive-code");
+                .hasMessage("WechatWork callback code is missing");
 
         verifyNoInteractions(apiClient, identityBindingService, platformSessionService);
+    }
+
+    @Test
+    void completeCallback_propagatesSanitizedApiFailureWithoutLeakingSensitiveCode() {
+        WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
+        IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
+        PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                enabledProperties(),
+                apiClient,
+                identityBindingService,
+                platformSessionService
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession(true).setAttribute("skillhub.oauth.wechatwork.state", "state-sensitive");
+        String sensitiveCode = "code-sensitive-20260530";
+
+        when(apiClient.resolveUserInfo(sensitiveCode))
+                .thenThrow(new WechatWorkAuthException("Failed to request WechatWork user info"));
+
+        assertThatThrownBy(() -> service.completeCallback(request, "state-sensitive", sensitiveCode))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("Failed to request WechatWork user info")
+                .hasMessageNotContaining(sensitiveCode);
+
+        verifyNoInteractions(identityBindingService, platformSessionService);
+    }
+
+    @Test
+    void completeCallback_requiresUserIdForBrowserLoginEvenWhenEmployeeLoginOnlyDisabled() {
+        WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
+        IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
+        PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
+        WechatWorkAuthProperties properties = enabledProperties();
+        properties.setEmployeeLoginOnly(false);
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                properties,
+                apiClient,
+                identityBindingService,
+                platformSessionService
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession(true).setAttribute("skillhub.oauth.wechatwork.state", "state-userid");
+        WechatWorkUserInfoResponse userInfo = new WechatWorkUserInfoResponse(
+                0,
+                "ok",
+                null,
+                "openid-only-user",
+                null,
+                Map.of("OpenId", "openid-only-user")
+        );
+        when(apiClient.resolveUserInfo("code-openid")).thenReturn(userInfo);
+
+        assertThatThrownBy(() -> service.completeCallback(request, "state-userid", "code-openid"))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("WechatWork callback user id is required for employee login");
+
+        verifyNoInteractions(identityBindingService, platformSessionService);
     }
 
     @Test
@@ -234,6 +305,7 @@ class WechatWorkLoginFlowServiceTest {
         properties.setEnabled(true);
         properties.setCorpId("corp-fr24");
         properties.setAgentId("100001");
+        properties.setCallbackBaseUrl("https://login.fr24.example");
         return properties;
     }
 }

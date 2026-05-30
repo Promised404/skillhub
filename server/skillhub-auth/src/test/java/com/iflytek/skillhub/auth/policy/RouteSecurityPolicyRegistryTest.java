@@ -74,6 +74,24 @@ class RouteSecurityPolicyRegistryTest {
     }
 
     @Test
+    void authorizationPolicies_shouldExposeOnlyExplicitWechatWorkLoginEndpointsAsPublicGet() {
+        boolean authorizePermitAll = registry.authorizationPolicies().stream()
+                .anyMatch(policy -> policy.method() == HttpMethod.GET
+                        && "/api/v1/auth/wechatwork/authorize".equals(policy.pattern())
+                        && policy.accessLevel() == RouteSecurityPolicyRegistry.AccessLevel.PERMIT_ALL);
+        boolean callbackPermitAll = registry.authorizationPolicies().stream()
+                .anyMatch(policy -> policy.method() == HttpMethod.GET
+                        && "/api/v1/auth/wechatwork/callback".equals(policy.pattern())
+                        && policy.accessLevel() == RouteSecurityPolicyRegistry.AccessLevel.PERMIT_ALL);
+        boolean wildcardExists = registry.authorizationPolicies().stream()
+                .anyMatch(policy -> "/api/v1/auth/wechatwork/**".equals(policy.pattern()));
+
+        assertTrue(authorizePermitAll);
+        assertTrue(callbackPermitAll);
+        assertFalse(wildcardExists);
+    }
+
+    @Test
     void apiTokenPolicySupportsNativeCliRoutes() {
         assertTrue(registry.authorizeApiToken("GET", "/api/cli/v1/auth/whoami", Set.of()).allowed());
         assertTrue(registry.authorizeApiToken("GET", "/api/cli/v1/skills/search", Set.of()).allowed());

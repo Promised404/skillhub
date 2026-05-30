@@ -57,7 +57,7 @@ public class WechatWorkLoginFlowService {
             session.setAttribute(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE, sanitizedReturnTo);
         }
 
-        String callbackUrl = resolveCallbackUrl(request);
+        String callbackUrl = resolveCallbackUrl();
         return UriComponentsBuilder.fromHttpUrl(WECHATWORK_QR_CONNECT_URL)
                 .queryParam("appid", properties.getCorpId())
                 .queryParam("agentid", properties.getAgentId())
@@ -132,19 +132,15 @@ public class WechatWorkLoginFlowService {
         return OAuthLoginRedirectSupport.DEFAULT_TARGET_URL;
     }
 
-    private String resolveCallbackUrl(HttpServletRequest request) {
+    private String resolveCallbackUrl() {
         String configuredBaseUrl = properties.getCallbackBaseUrl();
         if (StringUtils.hasText(configuredBaseUrl)) {
-            return trimTrailingSlash(configuredBaseUrl.trim()) + WECHATWORK_CALLBACK_PATH;
+            String normalizedBaseUrl = trimTrailingSlash(configuredBaseUrl.trim());
+            if (StringUtils.hasText(normalizedBaseUrl)) {
+                return normalizedBaseUrl + WECHATWORK_CALLBACK_PATH;
+            }
         }
-        UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
-                .scheme(request.getScheme())
-                .host(request.getServerName());
-        int port = request.getServerPort();
-        if (port > 0) {
-            builder.port(port);
-        }
-        return builder.path(WECHATWORK_CALLBACK_PATH).build().toUriString();
+        throw new WechatWorkAuthException("WechatWork callback base URL is required");
     }
 
     private String trimTrailingSlash(String value) {
@@ -163,7 +159,7 @@ public class WechatWorkLoginFlowService {
 
     private String requireUserId(String userId) {
         if (!StringUtils.hasText(userId)) {
-            throw new WechatWorkAuthException("WechatWork callback user id is missing");
+            throw new WechatWorkAuthException("WechatWork callback user id is required for employee login");
         }
         return userId;
     }
