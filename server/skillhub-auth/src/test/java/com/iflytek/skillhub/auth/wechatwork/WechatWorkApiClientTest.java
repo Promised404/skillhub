@@ -143,6 +143,15 @@ class WechatWorkApiClientTest {
 
     @Test
     void resolveUserInfo_retriesOnceWhenUserInfoReportsInvalidAccessToken() {
+        assertRetryOnTokenRelatedUserInfoError(40014, "invalid access_token");
+    }
+
+    @Test
+    void resolveUserInfo_retriesOnceWhenUserInfoReportsExpiredAccessToken() {
+        assertRetryOnTokenRelatedUserInfoError(42001, "access_token expired");
+    }
+
+    private void assertRetryOnTokenRelatedUserInfoError(int errCode, String errMessage) {
         RestClient.Builder restClientBuilder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
         server.expect(requestTo(
@@ -156,9 +165,7 @@ class WechatWorkApiClientTest {
         server.expect(requestTo(
                         "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=stale-token&code=retry-code"))
                 .andRespond(withSuccess(
-                        """
-                        {"errcode":40014,"errmsg":"invalid access_token"}
-                        """,
+                        "{\"errcode\":%d,\"errmsg\":\"%s\"}".formatted(errCode, errMessage),
                         MediaType.APPLICATION_JSON
                 ));
         server.expect(requestTo(
