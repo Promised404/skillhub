@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as loginButton from './login-button'
 import { LoginButton } from './login-button'
 
@@ -37,6 +37,10 @@ vi.mock('./use-auth-methods', () => ({
  * LoginButton renders OAuth login actions from backend-provided auth methods.
  */
 describe('login-button module exports', () => {
+  beforeEach(() => {
+    useAuthMethodsMock.mockReset()
+  })
+
   it('exports LoginButton component', () => {
     expect(loginButton.LoginButton).toBeTypeOf('function')
   })
@@ -60,5 +64,6 @@ describe('login-button module exports', () => {
 
     expect(html).toContain('/wechatwork-logo.svg')
     expect(html).toContain('Login with WeCom')
+    expect(useAuthMethodsMock).not.toHaveBeenCalled()
   })
 })

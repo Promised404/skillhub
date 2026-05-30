@@ -29,7 +29,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ username?: string, password?: string }>({})
   const isChinese = i18n.resolvedLanguage?.split('-')[0] === 'zh'
-  const { data: authMethods } = useAuthMethods(search.returnTo)
+  const { data: authMethods, isLoading: isLoadingAuthMethods } = useAuthMethods(search.returnTo)
   const methodList = authMethods ?? []
   const oauthMethods = methodList.filter((method) => method.methodType === 'OAUTH_REDIRECT')
   const passwordMethods = methodList.filter((method) =>
@@ -37,6 +37,8 @@ export function LoginPage() {
   const isWechatWorkOnly = oauthMethods.length === 1
     && oauthMethods[0].provider.toLowerCase() === 'wechatwork'
     && passwordMethods.length === 0
+    && !directAuthConfig.enabled
+    && !isLoadingAuthMethods
 
   const returnTo = search.returnTo && search.returnTo.startsWith('/') ? search.returnTo : '/dashboard'
   const disabledMessage = search.reason === 'accountDisabled' ? t('apiError.auth.accountDisabled') : null
@@ -203,7 +205,7 @@ export function LoginPage() {
                   <p className="text-sm text-muted-foreground">
                     {t('login.oauthHint')}
                   </p>
-                  <LoginButton returnTo={returnTo} methods={oauthMethods} />
+                  <LoginButton returnTo={returnTo} />
                 </TabsContent>
               </Tabs>
             )}

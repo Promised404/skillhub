@@ -89,7 +89,7 @@ describe('LoginPage', () => {
     navigateMock.mockReset()
     useSearchMock.mockReturnValue({ returnTo: '' })
     getDirectAuthRuntimeConfigMock.mockReturnValue({ enabled: false })
-    useAuthMethodsMock.mockReturnValue({ data: [] })
+    useAuthMethodsMock.mockReturnValue({ data: [], isLoading: false })
     loginButtonMock.mockClear()
   })
 
@@ -147,5 +147,37 @@ describe('LoginPage', () => {
     expect(html).toContain('login.tabPassword')
     expect(html).toContain('login.submit')
     expect(html).toContain('login.register')
+  })
+
+  it('keeps password UI when direct auth runtime is enabled', () => {
+    getDirectAuthRuntimeConfigMock.mockReturnValue({ enabled: true, provider: 'private-sso' })
+    useAuthMethodsMock.mockReturnValue({
+      data: [
+        {
+          id: 'wechatwork',
+          methodType: 'OAUTH_REDIRECT',
+          provider: 'WeChatWork',
+          displayName: 'WeCom',
+          actionUrl: '/oauth/wechatwork',
+        },
+      ],
+      isLoading: false,
+    })
+
+    const html = renderToStaticMarkup(<LoginPage />)
+
+    expect(html).toContain('login.tabPassword')
+    expect(html).toContain('login.submit')
+    expect(html).not.toContain('Enterprise WeCom Login')
+  })
+
+  it('keeps standard login surface while auth methods are loading', () => {
+    useAuthMethodsMock.mockReturnValue({ data: undefined, isLoading: true })
+
+    const html = renderToStaticMarkup(<LoginPage />)
+
+    expect(html).toContain('login.tabPassword')
+    expect(html).toContain('login.tabOAuth')
+    expect(html).not.toContain('Enterprise WeCom Login')
   })
 })
