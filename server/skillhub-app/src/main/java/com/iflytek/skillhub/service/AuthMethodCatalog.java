@@ -74,6 +74,7 @@ public class AuthMethodCatalog {
         String sanitizedReturnTo = OAuthLoginRedirectSupport.sanitizeReturnTo(returnTo);
         return new ArrayList<>(oAuth2ClientProperties.getRegistration().entrySet().stream()
             .sorted(Comparator.comparing(entry -> entry.getKey()))
+            .filter(entry -> authMethodVisibilityProperties.allows(entry.getKey()))
             .map(entry -> new AuthProviderResponse(
                 entry.getKey(),
                 entry.getValue().getClientName() != null && !entry.getValue().getClientName().isBlank()
