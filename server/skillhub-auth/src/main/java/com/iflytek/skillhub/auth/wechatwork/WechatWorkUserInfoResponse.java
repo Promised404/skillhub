@@ -1,5 +1,7 @@
 package com.iflytek.skillhub.auth.wechatwork;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -15,6 +17,6 @@ public record WechatWorkUserInfoResponse(
 ) {
 
     public WechatWorkUserInfoResponse {
-        raw = raw == null ? Map.of() : Map.copyOf(raw);
+        raw = raw == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(raw));
     }
 }

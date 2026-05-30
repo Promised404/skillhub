@@ -3,11 +3,14 @@ package com.iflytek.skillhub.auth.wechatwork;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -136,6 +139,128 @@ class WechatWorkApiClientTest {
         assertThat(first.userId()).isEqualTo("user-1");
         assertThat(second.userId()).isEqualTo("user-2");
         server.verify();
+    }
+
+    @Test
+    void resolveUserInfo_retriesOnceWhenUserInfoReportsInvalidAccessToken() {
+        RestClient.Builder restClientBuilder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=test-corp&corpsecret=test-secret"))
+                .andRespond(withSuccess(
+                        """
+                        {"errcode":0,"errmsg":"ok","access_token":"stale-token","expires_in":7200}
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=stale-token&code=retry-code"))
+                .andRespond(withSuccess(
+                        """
+                        {"errcode":40014,"errmsg":"invalid access_token"}
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=test-corp&corpsecret=test-secret"))
+                .andRespond(withSuccess(
+                        """
+                        {"errcode":0,"errmsg":"ok","access_token":"fresh-token","expires_in":7200}
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=fresh-token&code=retry-code"))
+                .andRespond(withSuccess(
+                        """
+                        {"errcode":0,"errmsg":"ok","UserId":"employee-1"}
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+
+        WechatWorkApiClient client = new WechatWorkApiClient(
+                properties(true),
+                restClientBuilder,
+                fixedClock()
+        );
+
+        WechatWorkUserInfoResponse response = client.resolveUserInfo("retry-code");
+
+        assertThat(response.userId()).isEqualTo("employee-1");
+        server.verify();
+    }
+
+    @Test
+    void resolveUserInfo_sanitizesTransportErrorForTokenRequest() {
+        RestClient.Builder restClientBuilder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=test-corp&corpsecret=test-secret"))
+                .andRespond(withServerError());
+        WechatWorkApiClient client = new WechatWorkApiClient(
+                properties(true),
+                restClientBuilder,
+                fixedClock()
+        );
+
+        assertThatThrownBy(() -> client.resolveUserInfo("code-sensitive"))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("Failed to request WechatWork access token")
+                .hasNoCause()
+                .hasMessageNotContaining("test-secret")
+                .hasMessageNotContaining("code-sensitive");
+        server.verify();
+    }
+
+    @Test
+    void resolveUserInfo_sanitizesTransportErrorForUserInfoRequest() {
+        RestClient.Builder restClientBuilder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=test-corp&corpsecret=test-secret"))
+                .andRespond(withSuccess(
+                        """
+                        {"errcode":0,"errmsg":"ok","access_token":"sensitive-token","expires_in":7200}
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+        server.expect(requestTo(
+                        "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=sensitive-token&code=sensitive-code"))
+                .andRespond(withServerError());
+        WechatWorkApiClient client = new WechatWorkApiClient(
+                properties(true),
+                restClientBuilder,
+                fixedClock()
+        );
+
+        assertThatThrownBy(() -> client.resolveUserInfo("sensitive-code"))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("Failed to request WechatWork user info")
+                .hasNoCause()
+                .hasMessageNotContaining("sensitive-token")
+                .hasMessageNotContaining("sensitive-code")
+                .hasMessageNotContaining("test-secret");
+        server.verify();
+    }
+
+    @Test
+    void userInfoResponse_rawAllowsNullValues() {
+        Map<String, Object> raw = new LinkedHashMap<>();
+        raw.put("UserId", "alice");
+        raw.put("DeviceId", null);
+
+        WechatWorkUserInfoResponse response = new WechatWorkUserInfoResponse(
+                0,
+                "ok",
+                "alice",
+                null,
+                null,
+                raw
+        );
+
+        assertThat(response.raw()).containsEntry("DeviceId", null);
+        assertThatThrownBy(() -> response.raw().put("new-key", "value"))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 
     private WechatWorkAuthProperties properties(boolean employeeLoginOnly) {

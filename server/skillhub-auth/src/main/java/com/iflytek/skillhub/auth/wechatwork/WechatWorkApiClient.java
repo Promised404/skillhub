@@ -7,7 +7,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 /**
  * Minimal WeChat Work API client for resolving login callback codes to user identity.
@@ -18,6 +17,8 @@ public class WechatWorkApiClient {
     private static final String API_BASE_URL = "https://qyapi.weixin.qq.com";
     private static final int TOKEN_REFRESH_BUFFER_SECONDS = 120;
     private static final int MIN_TOKEN_CACHE_SECONDS = 60;
+    private static final int INVALID_TOKEN_ERROR_CODE = 40014;
+    private static final int EXPIRED_TOKEN_ERROR_CODE = 42001;
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
             new ParameterizedTypeReference<>() {};
 
@@ -51,6 +52,11 @@ public class WechatWorkApiClient {
 
         String accessToken = loadAccessToken();
         WechatWorkUserInfoResponse response = requestUserInfo(accessToken, code);
+        if (shouldRefreshToken(response.errorCode())) {
+            invalidateCachedAccessToken();
+            String refreshedToken = loadAccessToken();
+            response = requestUserInfo(refreshedToken, code);
+        }
 
         if (response.errorCode() != 0) {
             throw new WechatWorkAuthException("WechatWork user info API failed, errcode="
@@ -113,8 +119,8 @@ public class WechatWorkApiClient {
                             .build())
                     .retrieve()
                     .body(MAP_TYPE);
-        } catch (RestClientException exception) {
-            throw new WechatWorkAuthException("Failed to request WechatWork access token", exception);
+        } catch (RuntimeException ignored) {
+            throw new WechatWorkAuthException("Failed to request WechatWork access token");
         }
         validateNonEmptyResponse(body, "token");
         return new WechatWorkAccessTokenResponse(
@@ -136,8 +142,8 @@ public class WechatWorkApiClient {
                             .build())
                     .retrieve()
                     .body(MAP_TYPE);
-        } catch (RestClientException exception) {
-            throw new WechatWorkAuthException("Failed to request WechatWork user info", exception);
+        } catch (RuntimeException ignored) {
+            throw new WechatWorkAuthException("Failed to request WechatWork user info");
         }
 
         validateNonEmptyResponse(body, "user info");
@@ -204,6 +210,16 @@ public class WechatWorkApiClient {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private boolean shouldRefreshToken(int errorCode) {
+        return errorCode == INVALID_TOKEN_ERROR_CODE || errorCode == EXPIRED_TOKEN_ERROR_CODE;
+    }
+
+    private void invalidateCachedAccessToken() {
+        synchronized (tokenLock) {
+            cachedAccessToken = null;
+        }
     }
 
     private record CachedAccessToken(String token, Instant expiresAt) {
