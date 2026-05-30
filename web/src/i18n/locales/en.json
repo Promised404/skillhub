@@ -10,6 +10,9 @@
     "publish": "Publish",
     "login": "Login"
   },
+  "brand": {
+    "displayName": "FR24 SkillHub"
+  },
   "landing": {
     "hero": {
       "title": "Discover & Share AI Skills",

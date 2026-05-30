@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { createElement } from 'react'
+import { appBrand } from '@/shared/lib/brand'
 
-// Layout is a component-only file with no exported pure functions or constants.
-// We verify that the named export exists for the router to consume.
+// Layout shell rendering is verified via static markup to avoid router runtime setup.
 
 vi.mock('@tanstack/react-router', () => ({
   Outlet: () => null,
@@ -35,6 +37,10 @@ vi.mock('@/shared/components/user-menu', () => ({
   UserMenu: () => null,
 }))
 
+vi.mock('@/features/notification/notification-bell', () => ({
+  NotificationBell: () => null,
+}))
+
 vi.mock('./layout-header-style', () => ({
   getAppHeaderClassName: () => 'header-class',
 }))
@@ -50,8 +56,10 @@ vi.mock('./layout-main-content', () => ({
 import { Layout } from './layout'
 
 describe('Layout', () => {
-  it('exports a named Layout component function', () => {
-    expect(typeof Layout).toBe('function')
-    expect(Layout.name).toBe('Layout')
+  it('renders FR24 shell branding', () => {
+    const html = renderToStaticMarkup(createElement(Layout))
+
+    expect(html).toContain(appBrand.displayName)
+    expect(html).toContain(appBrand.logoUrl)
   })
 })

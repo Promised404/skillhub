@@ -7,6 +7,7 @@ import { SkillCard } from '@/features/skill/skill-card'
 import { SkeletonList } from '@/shared/components/skeleton-loader'
 import { useSearchSkills } from '@/shared/hooks/use-skill-queries'
 import { useInView } from '@/shared/hooks/use-in-view'
+import { appBrand } from '@/shared/lib/brand'
 import { Button } from '@/shared/ui/button'
 
 /**
@@ -91,8 +92,17 @@ export function LandingPage() {
     <>
       {/* Hero Section */}
       <main ref={heroView.ref} className={`relative z-10 flex flex-col items-center pt-16 pb-20 px-4 md:pt-24 scroll-fade-up${heroView.inView ? ' in-view' : ''}`}>
+        <span className="mb-5 inline-flex h-10 w-[120px] items-center justify-center rounded-md bg-slate-900">
+          <img
+            src={appBrand.logoUrl}
+            alt={`${appBrand.companyShortName} logo`}
+            width={104}
+            height={24}
+            className="h-6 w-[104px] object-contain"
+          />
+        </span>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-brand-gradient mb-4">
-          SkillHub
+          {appBrand.displayName}
         </h1>
         <h2
           className="text-xl md:text-2xl font-semibold tracking-tight text-center mb-3"

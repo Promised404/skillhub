@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/use-auth'
 import { LanguageSwitcher } from '@/shared/components/language-switcher'
 import { UserMenu } from '@/shared/components/user-menu'
 import { NotificationBell } from '@/features/notification/notification-bell'
+import { appBrand } from '@/shared/lib/brand'
 import { getAppHeaderClassName } from './layout-header-style'
 import { getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
 
@@ -72,8 +73,19 @@ export function Layout() {
 
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
-        <Link to="/" className="text-xl font-semibold tracking-tight text-brand-gradient">
-          SkillHub
+        <Link to="/" className="flex items-center gap-2.5">
+          <span className="inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md bg-slate-900">
+            <img
+              src={appBrand.logoUrl}
+              alt={`${appBrand.companyShortName} logo`}
+              width={92}
+              height={20}
+              className="h-5 w-[92px] object-contain"
+            />
+          </span>
+          <span className="text-lg font-semibold tracking-tight text-brand-gradient">
+            {appBrand.productName}
+          </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-normal" style={{ color: 'hsl(var(--text-secondary))' }}>
@@ -137,10 +149,16 @@ export function Layout() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 md:gap-12">
             <div className="flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm bg-brand-gradient">
-                  S
-                </div>
-                <span className="text-lg font-bold text-brand-gradient">SkillHub</span>
+                <span className="inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md bg-slate-900">
+                  <img
+                    src={appBrand.logoUrl}
+                    alt={`${appBrand.companyShortName} logo`}
+                    width={92}
+                    height={20}
+                    className="h-5 w-[92px] object-contain"
+                  />
+                </span>
+                <span className="text-lg font-bold text-brand-gradient">{appBrand.displayName}</span>
               </div>
               <p className="text-sm max-w-xs" style={{ color: 'hsl(var(--text-secondary))' }}>
                 {t('layout.footerDescription')}
