@@ -45,7 +45,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.security.oauth2.client.provider.gitee.authorization-uri=https://gitee.com/oauth/authorize",
     "spring.security.oauth2.client.provider.gitee.token-uri=https://gitee.com/oauth/token",
     "spring.security.oauth2.client.provider.gitee.user-info-uri=https://gitee.com/api/v5/user",
-    "spring.security.oauth2.client.provider.gitee.user-name-attribute=id"
+    "spring.security.oauth2.client.provider.gitee.user-name-attribute=id",
+    "skillhub.auth.wechatwork.enabled=true",
+    "skillhub.auth.wechatwork.corp-id=fr24-corp",
+    "skillhub.auth.wechatwork.agent-id=100001",
+    "skillhub.auth.wechatwork.corp-secret=test-secret",
+    "skillhub.auth.wechatwork.display-name=WeCom",
+    "skillhub.auth.methods.visible-providers=wechatwork"
 })
 class AuthControllerTest {
 
@@ -169,10 +175,29 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/v1/auth/methods").param("returnTo", "/dashboard/publish"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
-            .andExpect(jsonPath("$.data[*].id", hasItems("local-password", "oauth-github", "oauth-gitee")))
-            .andExpect(jsonPath("$.data[?(@.id=='local-password')].methodType").value(hasItems("PASSWORD")))
-            .andExpect(jsonPath("$.data[?(@.id=='oauth-github')].actionUrl")
-                .value(hasItems("/oauth2/authorization/github?returnTo=%2Fdashboard%2Fpublish")));
+            .andExpect(jsonPath("$.data[*].id", hasItems("oauth-wechatwork")))
+            .andExpect(jsonPath("$.data[?(@.id=='oauth-wechatwork')].actionUrl")
+                .value(hasItems("/api/v1/auth/wechatwork/authorize?returnTo=%2Fdashboard%2Fpublish")));
+    }
+
+    @Test
+    void methodsShouldExposeWechatWorkWhenEnabled() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/methods").param("returnTo", "/dashboard"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data[?(@.id=='oauth-wechatwork')].provider")
+                .value(hasItems("wechatwork")))
+            .andExpect(jsonPath("$.data[?(@.id=='oauth-wechatwork')].actionUrl")
+                .value(hasItems("/api/v1/auth/wechatwork/authorize?returnTo=%2Fdashboard")));
+    }
+
+    @Test
+    void methodsShouldApplyVisibleProviderAllowlist() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/methods"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].provider").value("wechatwork"));
     }
 
     @Test
