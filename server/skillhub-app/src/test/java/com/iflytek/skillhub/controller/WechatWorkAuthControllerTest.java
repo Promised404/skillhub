@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.iflytek.skillhub.auth.wechatwork.WechatWorkApiClient;
 import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthException;
 import com.iflytek.skillhub.auth.wechatwork.WechatWorkLoginFlowService;
 import org.junit.jupiter.api.Test;
@@ -29,9 +28,6 @@ class WechatWorkAuthControllerTest {
     @MockBean
     private WechatWorkLoginFlowService loginFlowService;
 
-    @MockBean
-    private WechatWorkApiClient wechatWorkApiClient;
-
     @Test
     void authorize_redirectsToWechatWorkUrl() throws Exception {
         given(loginFlowService.buildAuthorizationRedirect(any(), eq("/dashboard")))
@@ -41,6 +37,16 @@ class WechatWorkAuthControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location",
                         "https://open.work.weixin.qq.com/wwopen/sso/qrConnect?appid=corp"));
+    }
+
+    @Test
+    void authorize_redirectsToLoginWhenWechatWorkAuthFails() throws Exception {
+        given(loginFlowService.buildAuthorizationRedirect(any(), eq("/dashboard")))
+                .willThrow(new WechatWorkAuthException("authorize failed"));
+
+        mockMvc.perform(get("/api/v1/auth/wechatwork/authorize").param("returnTo", "/dashboard"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", "/login?reason=ssoFailed"));
     }
 
     @Test

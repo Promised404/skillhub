@@ -59,6 +59,28 @@ class WechatWorkLoginFlowServiceTest {
     }
 
     @Test
+    void buildAuthorizationRedirect_trimsTrailingSlashFromCallbackBaseUrl() {
+        WechatWorkAuthProperties properties = enabledProperties();
+        properties.setCallbackBaseUrl("https://login.example.com/");
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                properties,
+                mock(WechatWorkApiClient.class),
+                mock(IdentityBindingService.class),
+                mock(PlatformSessionService.class)
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setScheme("http");
+        request.setServerName("ignored-host");
+        request.setServerPort(8080);
+
+        String redirect = service.buildAuthorizationRedirect(request, "/dashboard");
+
+        var queryParams = UriComponentsBuilder.fromUriString(redirect).build(true).getQueryParams();
+        assertThat(queryParams.getFirst("redirect_uri"))
+                .isEqualTo("https://login.example.com/api/v1/auth/wechatwork/callback");
+    }
+
+    @Test
     void completeCallback_rejectsStateMismatch() {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
@@ -123,6 +145,28 @@ class WechatWorkLoginFlowServiceTest {
         assertThatThrownBy(() -> service.completeCallback(request, "state-2", "code-2"))
                 .isInstanceOf(WechatWorkAuthException.class)
                 .hasMessageContaining("state");
+    }
+
+    @Test
+    void completeCallback_rejectsMissingCodeWithoutLeakingInput() {
+        WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
+        IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
+        PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                enabledProperties(),
+                apiClient,
+                identityBindingService,
+                platformSessionService
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession(true).setAttribute("skillhub.oauth.wechatwork.state", "state-3");
+
+        assertThatThrownBy(() -> service.completeCallback(request, "state-3", " "))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("WechatWork callback code is missing")
+                .hasMessageNotContaining("sensitive-code");
+
+        verifyNoInteractions(apiClient, identityBindingService, platformSessionService);
     }
 
     @Test

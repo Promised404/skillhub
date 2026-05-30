@@ -3,6 +3,7 @@ package com.iflytek.skillhub.auth.wechatwork;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ public class WechatWorkApiClient {
     private final Object tokenLock = new Object();
     private volatile CachedAccessToken cachedAccessToken;
 
+    @Autowired
     public WechatWorkApiClient(WechatWorkAuthProperties properties, RestClient.Builder restClientBuilder) {
         this(properties, restClientBuilder, Clock.systemUTC());
     }
