@@ -10,9 +10,6 @@
     "publish": "发布",
     "login": "登录"
   },
-  "brand": {
-    "displayName": "FR24 SkillHub"
-  },
   "landing": {
     "hero": {
       "title": "发现与分享 AI 技能",

@@ -61,5 +61,6 @@ describe('Layout', () => {
 
     expect(html).toContain(appBrand.displayName)
     expect(html).toContain(appBrand.logoUrl)
+    expect(html).toMatch(/<img[^>]*alt="FR24(?:\s+logo)?"/)
   })
 })
