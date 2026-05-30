@@ -7,6 +7,8 @@ import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
+import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthProperties;
+import com.iflytek.skillhub.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.config.AuthSessionBootstrapProperties;
 import com.iflytek.skillhub.config.DirectAuthProperties;
 import java.util.List;
@@ -121,5 +123,55 @@ class AuthMethodCatalogTest {
                 "direct-private-sso:private-sso",
                 "bootstrap-private-sso:private-sso"
             );
+    }
+
+    @Test
+    void listMethodsShouldExposeWechatWorkOnlyWhenBrowserLoginConfigIsComplete() {
+        OAuth2ClientProperties oauthProperties = new OAuth2ClientProperties();
+        DirectAuthProperties directAuthProperties = new DirectAuthProperties();
+        AuthSessionBootstrapProperties bootstrapProperties = new AuthSessionBootstrapProperties();
+        AuthMethodVisibilityProperties visibilityProperties = new AuthMethodVisibilityProperties();
+        visibilityProperties.setVisibleProviders(List.of("wechatwork"));
+
+        WechatWorkAuthProperties completeWechatWork = new WechatWorkAuthProperties();
+        completeWechatWork.setEnabled(true);
+        completeWechatWork.setCorpId("corp-fr24");
+        completeWechatWork.setAgentId("100001");
+        completeWechatWork.setCorpSecret("secret");
+        completeWechatWork.setCallbackBaseUrl("https://login.fr24.example");
+
+        AuthMethodCatalog completeCatalog = new AuthMethodCatalog(
+            oauthProperties,
+            directAuthProperties,
+            bootstrapProperties,
+            completeWechatWork,
+            visibilityProperties,
+            List.of(),
+            List.of()
+        );
+
+        WechatWorkAuthProperties missingCallbackWechatWork = new WechatWorkAuthProperties();
+        missingCallbackWechatWork.setEnabled(true);
+        missingCallbackWechatWork.setCorpId("corp-fr24");
+        missingCallbackWechatWork.setAgentId("100001");
+        missingCallbackWechatWork.setCorpSecret("secret");
+        missingCallbackWechatWork.setCallbackBaseUrl(" ");
+
+        AuthMethodCatalog missingCallbackCatalog = new AuthMethodCatalog(
+            oauthProperties,
+            directAuthProperties,
+            bootstrapProperties,
+            missingCallbackWechatWork,
+            visibilityProperties,
+            List.of(),
+            List.of()
+        );
+
+        assertThat(completeCatalog.listMethods(null))
+            .extracting(method -> method.id())
+            .contains("oauth-wechatwork");
+        assertThat(missingCallbackCatalog.listMethods(null))
+            .extracting(method -> method.id())
+            .doesNotContain("oauth-wechatwork");
     }
 }

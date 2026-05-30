@@ -107,7 +107,6 @@ skillhub:
       corp-secret: ${SKILLHUB_AUTH_WECHATWORK_CORP_SECRET:}
       callback-base-url: ${SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL:}
       display-name: ${SKILLHUB_AUTH_WECHATWORK_DISPLAY_NAME:WeCom}
-      employee-login-only: ${SKILLHUB_AUTH_WECHATWORK_EMPLOYEE_LOGIN_ONLY:true}
     methods:
       visible-providers: ${SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS:}
     password-reset:

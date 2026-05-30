@@ -65,7 +65,7 @@ public class WechatWorkApiClient {
                     + response.errorCode() + ", errmsg=" + response.errorMessage());
         }
 
-        if (properties.isEmployeeLoginOnly() && isBlank(response.userId())) {
+        if (isBlank(response.userId())) {
             throw new WechatWorkAuthException(
                     "WechatWork employee login is required but callback user is openid-only");
         }

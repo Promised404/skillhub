@@ -40,7 +40,7 @@ class WechatWorkApiClientTest {
                 ));
 
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -55,7 +55,7 @@ class WechatWorkApiClientTest {
     }
 
     @Test
-    void resolveUserInfo_deniesOpenIdOnlyUserWhenEmployeeLoginOnlyEnabled() {
+    void resolveUserInfo_deniesOpenIdOnlyUser() {
         RestClient.Builder restClientBuilder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restClientBuilder).build();
         server.expect(requestTo(
@@ -75,7 +75,7 @@ class WechatWorkApiClientTest {
                         MediaType.APPLICATION_JSON
                 ));
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -89,7 +89,7 @@ class WechatWorkApiClientTest {
     @Test
     void resolveUserInfo_rejectsBlankCode() {
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 RestClient.builder(),
                 fixedClock()
         );
@@ -128,7 +128,7 @@ class WechatWorkApiClientTest {
                         MediaType.APPLICATION_JSON
                 ));
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -186,7 +186,7 @@ class WechatWorkApiClientTest {
                 ));
 
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -205,7 +205,7 @@ class WechatWorkApiClientTest {
                         "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=test-corp&corpsecret=test-secret"))
                 .andRespond(withServerError());
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -235,7 +235,7 @@ class WechatWorkApiClientTest {
                         "https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo?access_token=sensitive-token&code=sensitive-code"))
                 .andRespond(withServerError());
         WechatWorkApiClient client = new WechatWorkApiClient(
-                properties(true),
+                properties(),
                 restClientBuilder,
                 fixedClock()
         );
@@ -270,11 +270,10 @@ class WechatWorkApiClientTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
-    private WechatWorkAuthProperties properties(boolean employeeLoginOnly) {
+    private WechatWorkAuthProperties properties() {
         WechatWorkAuthProperties properties = new WechatWorkAuthProperties();
         properties.setCorpId("test-corp");
         properties.setCorpSecret("test-secret");
-        properties.setEmployeeLoginOnly(employeeLoginOnly);
         return properties;
     }
 

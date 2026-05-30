@@ -112,7 +112,7 @@ public class AuthMethodCatalog {
                 buildAuthorizationUrl(entry.getKey(), sanitizedReturnTo)
             )));
 
-        if (wechatWorkAuthProperties.isEnabled()
+        if (wechatWorkAuthProperties.isBrowserLoginReady()
             && authMethodVisibilityProperties.allows(WECHATWORK_PROVIDER)) {
             methods.add(new AuthMethodResponse(
                 "oauth-wechatwork",

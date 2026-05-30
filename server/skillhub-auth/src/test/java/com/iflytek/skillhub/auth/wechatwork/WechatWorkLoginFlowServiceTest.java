@@ -209,14 +209,12 @@ class WechatWorkLoginFlowServiceTest {
     }
 
     @Test
-    void completeCallback_requiresUserIdForBrowserLoginEvenWhenEmployeeLoginOnlyDisabled() {
+    void completeCallback_requiresUserIdForBrowserLogin() {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkAuthProperties properties = enabledProperties();
-        properties.setEmployeeLoginOnly(false);
         WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
-                properties,
+                enabledProperties(),
                 apiClient,
                 identityBindingService,
                 platformSessionService

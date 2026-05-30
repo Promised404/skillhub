@@ -220,6 +220,7 @@ class AuthControllerTest {
     "skillhub.auth.wechatwork.corp-id=fr24-corp",
     "skillhub.auth.wechatwork.agent-id=100001",
     "skillhub.auth.wechatwork.corp-secret=test-secret",
+    "skillhub.auth.wechatwork.callback-base-url=https://login.fr24.example",
     "skillhub.auth.wechatwork.display-name=WeCom",
     "skillhub.auth.methods.visible-providers=wechatwork"
 })
@@ -263,6 +264,56 @@ class AuthControllerVisibilityAllowlistTest {
     @Test
     void providersShouldApplyVisibleProviderAllowlist() throws Exception {
         mockMvc.perform(get("/api/v1/auth/providers"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.length()").value(0));
+    }
+}
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@TestPropertySource(properties = {
+    "spring.security.oauth2.client.registration.github.client-name=GitHub",
+    "spring.security.oauth2.client.registration.gitee.client-id=placeholder",
+    "spring.security.oauth2.client.registration.gitee.client-secret=placeholder",
+    "spring.security.oauth2.client.registration.gitee.provider=gitee",
+    "spring.security.oauth2.client.registration.gitee.authorization-grant-type=authorization_code",
+    "spring.security.oauth2.client.registration.gitee.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}",
+    "spring.security.oauth2.client.registration.gitee.scope=user_info",
+    "spring.security.oauth2.client.registration.gitee.client-name=Gitee",
+    "spring.security.oauth2.client.provider.gitee.authorization-uri=https://gitee.com/oauth/authorize",
+    "spring.security.oauth2.client.provider.gitee.token-uri=https://gitee.com/oauth/token",
+    "spring.security.oauth2.client.provider.gitee.user-info-uri=https://gitee.com/api/v5/user",
+    "spring.security.oauth2.client.provider.gitee.user-name-attribute=id",
+    "skillhub.auth.wechatwork.enabled=true",
+    "skillhub.auth.wechatwork.corp-id=fr24-corp",
+    "skillhub.auth.wechatwork.agent-id=100001",
+    "skillhub.auth.wechatwork.corp-secret=test-secret",
+    "skillhub.auth.wechatwork.callback-base-url= ",
+    "skillhub.auth.wechatwork.display-name=WeCom",
+    "skillhub.auth.methods.visible-providers=wechatwork"
+})
+class AuthControllerVisibilityWechatWorkReadinessTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private NamespaceMemberRepository namespaceMemberRepository;
+
+    @MockBean
+    private AuthFailureThrottleService authFailureThrottleService;
+
+    @MockBean
+    private UserAccountRepository userAccountRepository;
+
+    @MockBean
+    private UserRoleBindingRepository userRoleBindingRepository;
+
+    @Test
+    void methodsShouldNotExposeWechatWorkWhenCallbackBaseUrlMissing() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/methods"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
             .andExpect(jsonPath("$.data.length()").value(0));

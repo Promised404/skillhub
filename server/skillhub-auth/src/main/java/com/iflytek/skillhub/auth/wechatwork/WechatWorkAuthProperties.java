@@ -2,6 +2,7 @@ package com.iflytek.skillhub.auth.wechatwork;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @ConfigurationProperties(prefix = "skillhub.auth.wechatwork")
@@ -13,7 +14,6 @@ public class WechatWorkAuthProperties {
     private String corpSecret;
     private String callbackBaseUrl;
     private String displayName = "WeCom";
-    private boolean employeeLoginOnly = true;
 
     public boolean isEnabled() {
         return enabled;
@@ -63,11 +63,11 @@ public class WechatWorkAuthProperties {
         this.displayName = displayName;
     }
 
-    public boolean isEmployeeLoginOnly() {
-        return employeeLoginOnly;
-    }
-
-    public void setEmployeeLoginOnly(boolean employeeLoginOnly) {
-        this.employeeLoginOnly = employeeLoginOnly;
+    public boolean isBrowserLoginReady() {
+        return enabled
+            && StringUtils.hasText(corpId)
+            && StringUtils.hasText(agentId)
+            && StringUtils.hasText(corpSecret)
+            && StringUtils.hasText(callbackBaseUrl);
     }
 }
