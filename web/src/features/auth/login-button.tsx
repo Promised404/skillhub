@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next'
+import type { AuthMethod } from '@/api/types'
 import { Button } from '@/shared/ui/button'
 import { useAuthMethods } from './use-auth-methods'
 
 interface LoginButtonProps {
   returnTo?: string
+  methods?: AuthMethod[]
 }
 
 /**
@@ -23,11 +25,20 @@ function OAuthIcon({ provider }: { provider: string }) {
 /**
  * Renders OAuth login buttons from the auth-method catalog returned by the backend.
  */
-export function LoginButton({ returnTo }: LoginButtonProps) {
+export function LoginButton({ returnTo, methods }: LoginButtonProps) {
+  if (methods) {
+    return <OAuthLoginButtons methods={methods} />
+  }
+
+  return <CatalogLoginButton returnTo={returnTo} />
+}
+
+function CatalogLoginButton({ returnTo }: { returnTo?: string }) {
   const { t } = useTranslation()
   const { data, isLoading } = useAuthMethods(returnTo)
+  const authMethods = data ?? []
 
-  const providers = (data ?? []).filter((method) => method.methodType === 'OAUTH_REDIRECT')
+  const providers = authMethods.filter((method) => method.methodType === 'OAUTH_REDIRECT')
 
   if (isLoading) {
     return (
@@ -39,6 +50,13 @@ export function LoginButton({ returnTo }: LoginButtonProps) {
       </div>
     )
   }
+
+  return <OAuthLoginButtons methods={providers} />
+}
+
+function OAuthLoginButtons({ methods }: { methods: AuthMethod[] }) {
+  const { t } = useTranslation()
+  const providers = methods.filter((method) => method.methodType === 'OAUTH_REDIRECT')
 
   return (
     <div className="space-y-3">
@@ -58,4 +76,3 @@ export function LoginButton({ returnTo }: LoginButtonProps) {
     </div>
   )
 }
-

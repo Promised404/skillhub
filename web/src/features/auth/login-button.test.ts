@@ -1,16 +1,64 @@
-import { describe, expect, it } from 'vitest'
+import { createElement } from 'react'
+import type { ReactNode } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it, vi } from 'vitest'
 import * as loginButton from './login-button'
+import { LoginButton } from './login-button'
+
+const useAuthMethodsMock = vi.fn()
+
+vi.mock('react-i18next', async () => {
+  const actual = await vi.importActual<typeof import('react-i18next')>('react-i18next')
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string, options?: { name?: string }) => {
+        if (key === 'loginButton.loading') {
+          return 'Loading...'
+        }
+        if (key === 'loginButton.loginWith') {
+          return `Login with ${options?.name ?? ''}`.trim()
+        }
+        return key
+      },
+    }),
+  }
+})
+
+vi.mock('@/shared/ui/button', () => ({
+  Button: ({ children }: { children: ReactNode }) => createElement('button', { type: 'button' }, children),
+}))
+
+vi.mock('./use-auth-methods', () => ({
+  useAuthMethods: (...args: unknown[]) => useAuthMethodsMock(...args),
+}))
 
 /**
- * LoginButton is a React component that renders OAuth login buttons from backend-provided
- * auth methods. It filters for OAUTH_REDIRECT method types and shows a loading state.
- * There are no exported pure functions, constants, or data transformations to unit-test.
- *
- * Full rendering tests would require a React test renderer, QueryClient provider,
- * and i18next setup. This file verifies the export surface.
+ * LoginButton renders OAuth login actions from backend-provided auth methods.
  */
 describe('login-button module exports', () => {
   it('exports LoginButton component', () => {
     expect(loginButton.LoginButton).toBeTypeOf('function')
+  })
+
+  it('renders WeCom provider logo and login copy', () => {
+    useAuthMethodsMock.mockReturnValue({ data: [], isLoading: false })
+
+    const html = renderToStaticMarkup(
+      createElement(LoginButton, {
+        methods: [
+          {
+            id: 'wechatwork',
+            methodType: 'OAUTH_REDIRECT',
+            provider: 'WeChatWork',
+            displayName: 'WeCom',
+            actionUrl: '/oauth/wechatwork',
+          },
+        ],
+      }),
+    )
+
+    expect(html).toContain('/wechatwork-logo.svg')
+    expect(html).toContain('Login with WeCom')
   })
 })
