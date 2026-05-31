@@ -38,6 +38,7 @@ public class DirectAuthService {
     public PlatformPrincipal authenticate(String providerCode,
                                           String username,
                                           String password,
+                                          String twoFactorCode,
                                           HttpServletRequest request) {
         if (!properties.isEnabled()) {
             throw new ForbiddenException("error.auth.direct.disabled");
@@ -48,7 +49,7 @@ public class DirectAuthService {
             throw new BadRequestException("error.auth.direct.providerUnsupported", providerCode);
         }
 
-        PlatformPrincipal principal = provider.authenticate(new DirectAuthRequest(username, password));
+        PlatformPrincipal principal = provider.authenticate(new DirectAuthRequest(username, password, twoFactorCode));
         sessionBootstrapService.establishSession(principal, request);
         return principal;
     }

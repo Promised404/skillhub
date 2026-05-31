@@ -32,7 +32,7 @@ class PrivateSsoClientTest {
         WebClient webClient = WebClient.builder()
                 .baseUrl(props.getBaseUrl())
                 .build();
-        client = new PrivateSsoClient(webClient, props, mapper);
+        client = new PrivateSsoClient(webClient, props);
     }
 
     @AfterEach
@@ -127,7 +127,7 @@ class PrivateSsoClientTest {
         props.setConnectTimeout(java.time.Duration.ofSeconds(1));
         props.setReadTimeout(java.time.Duration.ofSeconds(1));
         WebClient webClient = WebClient.builder().baseUrl(props.getBaseUrl()).build();
-        PrivateSsoClient failingClient = new PrivateSsoClient(webClient, props, mapper);
+        PrivateSsoClient failingClient = new PrivateSsoClient(webClient, props);
 
         assertThatThrownBy(() -> failingClient.authenticate("zhangsan", "pw", null))
                 .isInstanceOf(AuthFlowException.class)

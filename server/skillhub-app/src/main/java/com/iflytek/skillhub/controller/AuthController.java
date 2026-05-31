@@ -167,6 +167,7 @@ public class AuthController extends BaseApiController {
                     request.provider(),
                     request.username(),
                     request.password(),
+                    request.twoFactorCode(),
                     httpRequest
             );
         } catch (AuthFlowException ex) {

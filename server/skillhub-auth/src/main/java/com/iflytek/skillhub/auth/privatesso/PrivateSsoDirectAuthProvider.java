@@ -30,7 +30,7 @@ public class PrivateSsoDirectAuthProvider implements DirectAuthProvider {
 
     @Override
     public PlatformPrincipal authenticate(DirectAuthRequest request) {
-        SsoUser ssoUser = client.authenticate(request.username(), request.password(), null);
+        SsoUser ssoUser = client.authenticate(request.username(), request.password(), request.twoFactorCode());
         return identityService.resolveOrCreate(ssoUser, identityConfig);
     }
 }

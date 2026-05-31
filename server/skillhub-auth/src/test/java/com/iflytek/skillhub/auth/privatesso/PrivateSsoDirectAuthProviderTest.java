@@ -49,7 +49,20 @@ class PrivateSsoDirectAuthProviderTest {
         when(client.authenticate("zhangsan", "encrypted-pw", null)).thenReturn(ssoUser);
         when(identityService.resolveOrCreate(ssoUser, identityConfig)).thenReturn(expected);
 
-        PlatformPrincipal result = provider.authenticate(new DirectAuthRequest("zhangsan", "encrypted-pw"));
+        PlatformPrincipal result = provider.authenticate(new DirectAuthRequest("zhangsan", "encrypted-pw", null));
+
+        assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    void authenticate_passesTwoFactorCode() {
+        SsoUser ssoUser = new SsoUser("U10042", "zhangsan", "张三", "zhangsan@company.com", null);
+        PlatformPrincipal expected = new PlatformPrincipal("usr_1", "张三", "zhangsan@company.com", null, "private-sso", Set.of("USER"));
+
+        when(client.authenticate("zhangsan", "encrypted-pw", "123456")).thenReturn(ssoUser);
+        when(identityService.resolveOrCreate(ssoUser, identityConfig)).thenReturn(expected);
+
+        PlatformPrincipal result = provider.authenticate(new DirectAuthRequest("zhangsan", "encrypted-pw", "123456"));
 
         assertThat(result).isEqualTo(expected);
     }
@@ -59,7 +72,7 @@ class PrivateSsoDirectAuthProviderTest {
         when(client.authenticate("zhangsan", "wrong", null))
                 .thenThrow(new AuthFlowException(org.springframework.http.HttpStatus.UNAUTHORIZED, "error.auth.invalidCredentials"));
 
-        assertThatThrownBy(() -> provider.authenticate(new DirectAuthRequest("zhangsan", "wrong")))
+        assertThatThrownBy(() -> provider.authenticate(new DirectAuthRequest("zhangsan", "wrong", null)))
                 .isInstanceOf(AuthFlowException.class);
     }
 }
