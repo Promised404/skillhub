@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.auth.wechatwork;
 
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.identity.IdentityBindingService;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.OAuthLoginRedirectSupport;
@@ -25,19 +26,23 @@ public class WechatWorkLoginFlowService {
     private static final String WECHATWORK_QR_CONNECT_URL = "https://open.work.weixin.qq.com/wwopen/sso/qrConnect";
     private static final String WECHATWORK_CALLBACK_PATH = "/api/v1/auth/wechatwork/callback";
     private static final String SESSION_STATE_ATTRIBUTE = "skillhub.oauth.wechatwork.state";
+    private static final String PROVIDER_CODE = "wechatwork";
     private static final int STATE_BYTES = 32;
 
     private final WechatWorkAuthProperties properties;
+    private final AuthMethodVisibilityProperties authMethodVisibilityProperties;
     private final WechatWorkApiClient apiClient;
     private final IdentityBindingService identityBindingService;
     private final PlatformSessionService platformSessionService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public WechatWorkLoginFlowService(WechatWorkAuthProperties properties,
+                                      AuthMethodVisibilityProperties authMethodVisibilityProperties,
                                       WechatWorkApiClient apiClient,
                                       IdentityBindingService identityBindingService,
                                       PlatformSessionService platformSessionService) {
         this.properties = properties;
+        this.authMethodVisibilityProperties = authMethodVisibilityProperties;
         this.apiClient = apiClient;
         this.identityBindingService = identityBindingService;
         this.platformSessionService = platformSessionService;
@@ -108,6 +113,9 @@ public class WechatWorkLoginFlowService {
     private void assertEnabled() {
         if (!properties.isEnabled()) {
             throw new WechatWorkAuthException("WechatWork login is disabled");
+        }
+        if (!authMethodVisibilityProperties.allows(PROVIDER_CODE)) {
+            throw new WechatWorkAuthException("WechatWork login is hidden by authentication method policy");
         }
     }
 

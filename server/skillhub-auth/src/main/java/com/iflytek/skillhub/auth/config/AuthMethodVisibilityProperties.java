@@ -1,4 +1,4 @@
-package com.iflytek.skillhub.config;
+package com.iflytek.skillhub.auth.config;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,12 +11,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.iflytek.skillhub.auth.exception.AuthFlowException;
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.local.LocalAuthService;
 import com.iflytek.skillhub.auth.local.PasswordResetService;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.metrics.SkillHubMetrics;
 import com.iflytek.skillhub.security.AuthFailureThrottleService;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,9 @@ class LocalAuthControllerTest {
 
     @MockBean
     private PasswordResetService passwordResetService;
+
+    @Autowired
+    private AuthMethodVisibilityProperties authMethodVisibilityProperties;
 
     @Test
     void login_returnsCurrentUserEnvelope() throws Exception {
@@ -106,6 +111,25 @@ class LocalAuthControllerTest {
     }
 
     @Test
+    void register_returnsForbiddenWhenLocalProviderIsHidden() throws Exception {
+        authMethodVisibilityProperties.setVisibleProviders(List.of("wechatwork"));
+        try {
+            mockMvc.perform(post("/api/v1/auth/local/register")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"username":"bob","password":"Abcd123!","email":"bob@example.com"}
+                        """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+        } finally {
+            authMethodVisibilityProperties.setVisibleProviders(Collections.emptyList());
+        }
+
+        verify(localAuthService, never()).register("bob", "Abcd123!", "bob@example.com");
+    }
+
+    @Test
     void register_rejectsInvalidEmailFormat() throws Exception {
         given(localAuthService.register("bob", "Abcd123!", "not-an-email"))
             .willThrow(new AuthFlowException(HttpStatus.BAD_REQUEST, "validation.auth.local.email.invalid"));
@@ -156,6 +180,26 @@ class LocalAuthControllerTest {
         verify(authFailureThrottleService).recordFailure("local", "alice", "127.0.0.1");
         verify(skillHubMetrics).recordLocalLogin(false);
         verify(skillHubMetrics, never()).recordLocalLogin(true);
+    }
+
+    @Test
+    void login_returnsForbiddenWhenLocalProviderIsHidden() throws Exception {
+        authMethodVisibilityProperties.setVisibleProviders(List.of("wechatwork"));
+        try {
+            mockMvc.perform(post("/api/v1/auth/local/login")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"username":"alice","password":"Abcd123!"}
+                        """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+        } finally {
+            authMethodVisibilityProperties.setVisibleProviders(Collections.emptyList());
+        }
+
+        verify(localAuthService, never()).login("alice", "Abcd123!");
+        verify(authFailureThrottleService, never()).assertAllowed("local", "alice", "127.0.0.1");
     }
 
     @Test

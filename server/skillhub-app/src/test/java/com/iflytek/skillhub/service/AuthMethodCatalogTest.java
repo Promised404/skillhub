@@ -8,7 +8,7 @@ import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthProperties;
-import com.iflytek.skillhub.config.AuthMethodVisibilityProperties;
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.config.AuthSessionBootstrapProperties;
 import com.iflytek.skillhub.config.DirectAuthProperties;
 import java.util.List;

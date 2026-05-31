@@ -31,6 +31,15 @@ data:
   # Session 配置
   # HTTP 环境设为 false，HTTPS 环境设为 true
   session-cookie-secure: "false"
+
+  # WeCom / 企业微信扫码登录（可选）
+  # FR24 员工入口启用时，visible-providers 建议只保留 wechatwork
+  skillhub-auth-wechatwork-enabled: "false"
+  skillhub-auth-wechatwork-corp-id: ""
+  skillhub-auth-wechatwork-agent-id: ""
+  skillhub-auth-wechatwork-callback-base-url: ""
+  skillhub-auth-wechatwork-display-name: WeCom
+  skillhub-auth-methods-visible-providers: ""
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

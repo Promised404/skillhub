@@ -87,9 +87,8 @@ controller/service split:
 - `skillhub.auth.wechatwork.corp-id`
 - `skillhub.auth.wechatwork.agent-id`
 - `skillhub.auth.wechatwork.corp-secret`
-- `skillhub.auth.wechatwork.callback-base-url` or use `skillhub.public.base-url`
+- `skillhub.auth.wechatwork.callback-base-url`
 - `skillhub.auth.wechatwork.display-name` defaulting to `WeCom`
-- `skillhub.auth.wechatwork.employee-login-only` defaulting to `true`
 
 Secrets must come from environment variables in deployment configuration. Do not commit real FR24
 WeCom credentials.
@@ -144,7 +143,7 @@ Add a small WeCom API client service:
 1. Call WeCom `gettoken` with `corp-id` and `corp-secret`.
 2. Cache the access token until shortly before expiry.
 3. Call WeCom `getuserinfo` with the access token and callback `code`.
-4. Require a `UserId` in the response when `employee-login-only` is true.
+4. Require a `UserId` in the response.
 5. Treat `OpenId` without `UserId` as non-employee and deny access.
 
 The normalized SkillHub claims should be:
@@ -231,7 +230,8 @@ SKILLHUB_AUTH_WECHATWORK_ENABLED=true
 SKILLHUB_AUTH_WECHATWORK_CORP_ID=<fr24 corp id>
 SKILLHUB_AUTH_WECHATWORK_AGENT_ID=<wecom app agent id>
 SKILLHUB_AUTH_WECHATWORK_CORP_SECRET=<wecom app secret>
-SKILLHUB_AUTH_METHOD_VISIBLE_PROVIDERS=wechatwork
+SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL=https://<fr24-skillhub-host>
+SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS=wechatwork
 BOOTSTRAP_ADMIN_ENABLED=true
 ```
 

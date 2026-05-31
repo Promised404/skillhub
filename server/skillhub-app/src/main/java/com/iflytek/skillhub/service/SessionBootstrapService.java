@@ -1,6 +1,7 @@
 package com.iflytek.skillhub.service;
 
 import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.session.PlatformSessionService;
 import com.iflytek.skillhub.config.AuthSessionBootstrapProperties;
@@ -21,13 +22,16 @@ import org.springframework.stereotype.Service;
 public class SessionBootstrapService {
 
     private final AuthSessionBootstrapProperties properties;
+    private final AuthMethodVisibilityProperties authMethodVisibilityProperties;
     private final Map<String, PassiveSessionAuthenticator> authenticatorsByProvider;
     private final PlatformSessionService platformSessionService;
 
     public SessionBootstrapService(AuthSessionBootstrapProperties properties,
+                                   AuthMethodVisibilityProperties authMethodVisibilityProperties,
                                    List<PassiveSessionAuthenticator> authenticators,
                                    PlatformSessionService platformSessionService) {
         this.properties = properties;
+        this.authMethodVisibilityProperties = authMethodVisibilityProperties;
         this.authenticatorsByProvider = authenticators.stream()
             .collect(java.util.stream.Collectors.toUnmodifiableMap(
                 PassiveSessionAuthenticator::providerCode,
@@ -39,6 +43,9 @@ public class SessionBootstrapService {
     public PlatformPrincipal bootstrap(String providerCode, HttpServletRequest request) {
         if (!properties.isEnabled()) {
             throw new ForbiddenException("error.auth.sessionBootstrap.disabled");
+        }
+        if (!authMethodVisibilityProperties.allows(providerCode)) {
+            throw new ForbiddenException("error.auth.method.disabled");
         }
 
         PassiveSessionAuthenticator authenticator = authenticatorsByProvider.get(providerCode);

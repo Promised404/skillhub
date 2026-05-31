@@ -1,12 +1,14 @@
 package com.iflytek.skillhub.controller;
 
 import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.domain.user.UserAccount;
 import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import java.util.List;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,9 @@ class SessionBootstrapControllerTest {
     @MockBean
     private UserRoleBindingRepository userRoleBindingRepository;
 
+    @Autowired
+    private AuthMethodVisibilityProperties authMethodVisibilityProperties;
+
     @Test
     void sessionBootstrapShouldEstablishSessionWhenAuthenticatorSucceeds() throws Exception {
         given(namespaceMemberRepository.findByUserId("sso-user-1")).willReturn(List.of());
@@ -86,6 +91,23 @@ class SessionBootstrapControllerTest {
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void sessionBootstrapShouldRejectProviderHiddenByAllowlist() throws Exception {
+        authMethodVisibilityProperties.setVisibleProviders(List.of("wechatwork"));
+        try {
+            mockMvc.perform(post("/api/v1/auth/session/bootstrap")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .content("""
+                        {"provider":"private-sso"}
+                        """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+        } finally {
+            authMethodVisibilityProperties.setVisibleProviders(Collections.emptyList());
+        }
     }
 
     @TestConfiguration

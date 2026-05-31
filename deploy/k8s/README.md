@@ -62,6 +62,7 @@ cp secret.yaml.example secret.yaml
 | bootstrap-admin-password | 管理员密码 | 是 |
 | oauth2-github-client-id | GitHub OAuth ID | 否 |
 | oauth2-github-client-secret | GitHub OAuth 密钥 | 否 |
+| skillhub-auth-wechatwork-corp-secret | WeCom / 企业微信应用 Secret | 否 |
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
 
 ### 3. 选择部署方式
@@ -180,6 +181,12 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 | bootstrap-admin-display-name | Platform Admin | 管理员显示名称 |
 | bootstrap-admin-email | admin@example.com | 管理员邮箱 |
 | session-cookie-secure | false | HTTPS 环境设为 true |
+| skillhub-auth-wechatwork-enabled | false | 是否启用 WeCom / 企业微信扫码登录 |
+| skillhub-auth-wechatwork-corp-id | 空 | 企业微信 Corp ID |
+| skillhub-auth-wechatwork-agent-id | 空 | 企业微信应用 Agent ID |
+| skillhub-auth-wechatwork-callback-base-url | 空 | SkillHub 对外 HTTPS 根地址，不带尾部 `/` |
+| skillhub-auth-wechatwork-display-name | WeCom | 登录按钮显示名称 |
+| skillhub-auth-methods-visible-providers | 空 | 登录方式可见白名单；FR24 员工入口设为 `wechatwork` |
 
 ### Secret 配置项
 
@@ -191,8 +198,34 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 | bootstrap-admin-password | 管理员密码 | 是 |
 | oauth2-github-client-id | GitHub OAuth ID | 否 |
 | oauth2-github-client-secret | GitHub OAuth 密钥 | 否 |
+| skillhub-auth-wechatwork-corp-secret | WeCom / 企业微信应用 Secret | 否 |
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
 | skill-scanner-llm-model | LLM 模型名称 | 否 |
+
+### FR24 WeCom 登录配置
+
+启用 FR24 私有化员工入口时，建议在 `base/configmap.yaml` 中设置：
+
+```yaml
+skillhub-auth-wechatwork-enabled: "true"
+skillhub-auth-wechatwork-corp-id: "<fr24-corp-id>"
+skillhub-auth-wechatwork-agent-id: "<wecom-agent-id>"
+skillhub-auth-wechatwork-callback-base-url: "https://skillhub.fr24.example"
+skillhub-auth-wechatwork-display-name: WeCom
+skillhub-auth-methods-visible-providers: wechatwork
+session-cookie-secure: "true"
+```
+
+并在 `base/secret.yaml` 中设置：
+
+```yaml
+skillhub-auth-wechatwork-corp-secret: "<wecom-app-secret>"
+```
+
+企业微信管理后台需要把 `skillhub-auth-wechatwork-callback-base-url` 对应域名配置为该应用可信回调域名。
+如果需要使用本地 bootstrap admin 做首次平台管理，请先完成初始化，或在临时初始化窗口把
+`skillhub-auth-methods-visible-providers` 设为 `wechatwork,local`；正式开放员工入口前应恢复为
+`wechatwork`。
 
 ### 存储配置
 

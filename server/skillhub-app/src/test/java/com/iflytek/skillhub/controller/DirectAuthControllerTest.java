@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.local.LocalAuthService;
 import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
@@ -16,6 +17,7 @@ import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.security.AuthFailureThrottleService;
 import java.util.List;
 import java.util.Set;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -51,6 +53,9 @@ class DirectAuthControllerTest {
 
     @MockBean
     private UserRoleBindingRepository userRoleBindingRepository;
+
+    @Autowired
+    private AuthMethodVisibilityProperties authMethodVisibilityProperties;
 
     @Test
     void directLoginShouldAuthenticateViaConfiguredProvider() throws Exception {
@@ -97,5 +102,22 @@ class DirectAuthControllerTest {
                     """))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
+    void directLoginShouldRejectProviderHiddenByAllowlist() throws Exception {
+        authMethodVisibilityProperties.setVisibleProviders(List.of("wechatwork"));
+        try {
+            mockMvc.perform(post("/api/v1/auth/direct/login")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .content("""
+                        {"provider":"local","username":"direct-user","password":"Abcd123!"}
+                        """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+        } finally {
+            authMethodVisibilityProperties.setVisibleProviders(Collections.emptyList());
+        }
     }
 }

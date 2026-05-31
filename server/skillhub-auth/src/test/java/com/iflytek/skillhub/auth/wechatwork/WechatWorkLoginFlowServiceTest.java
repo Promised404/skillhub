@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.identity.IdentityBindingService;
 import com.iflytek.skillhub.auth.oauth.OAuthClaims;
 import com.iflytek.skillhub.auth.oauth.OAuthLoginRedirectSupport;
@@ -28,7 +29,7 @@ class WechatWorkLoginFlowServiceTest {
     @Test
     void buildAuthorizationRedirect_storesStateAndReturnToAndBuildsQrConnectUrl() {
         WechatWorkAuthProperties properties = enabledProperties();
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 properties,
                 mock(WechatWorkApiClient.class),
                 mock(IdentityBindingService.class),
@@ -59,7 +60,7 @@ class WechatWorkLoginFlowServiceTest {
     void buildAuthorizationRedirect_trimsTrailingSlashFromCallbackBaseUrl() {
         WechatWorkAuthProperties properties = enabledProperties();
         properties.setCallbackBaseUrl("https://login.example.com/");
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 properties,
                 mock(WechatWorkApiClient.class),
                 mock(IdentityBindingService.class),
@@ -81,7 +82,7 @@ class WechatWorkLoginFlowServiceTest {
     void buildAuthorizationRedirect_rejectsMissingCallbackBaseUrl() {
         WechatWorkAuthProperties properties = enabledProperties();
         properties.setCallbackBaseUrl(" ");
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 properties,
                 mock(WechatWorkApiClient.class),
                 mock(IdentityBindingService.class),
@@ -95,11 +96,29 @@ class WechatWorkLoginFlowServiceTest {
     }
 
     @Test
+    void buildAuthorizationRedirect_rejectsWhenProviderIsHiddenByAllowlist() {
+        AuthMethodVisibilityProperties visibilityProperties = new AuthMethodVisibilityProperties();
+        visibilityProperties.setVisibleProviders(java.util.List.of("github"));
+        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+                enabledProperties(),
+                visibilityProperties,
+                mock(WechatWorkApiClient.class),
+                mock(IdentityBindingService.class),
+                mock(PlatformSessionService.class)
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        assertThatThrownBy(() -> service.buildAuthorizationRedirect(request, "/dashboard"))
+                .isInstanceOf(WechatWorkAuthException.class)
+                .hasMessage("WechatWork login is hidden by authentication method policy");
+    }
+
+    @Test
     void completeCallback_rejectsStateMismatch() {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -121,7 +140,7 @@ class WechatWorkLoginFlowServiceTest {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -166,7 +185,7 @@ class WechatWorkLoginFlowServiceTest {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -187,7 +206,7 @@ class WechatWorkLoginFlowServiceTest {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -213,7 +232,7 @@ class WechatWorkLoginFlowServiceTest {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -243,7 +262,7 @@ class WechatWorkLoginFlowServiceTest {
         WechatWorkApiClient apiClient = mock(WechatWorkApiClient.class);
         IdentityBindingService identityBindingService = mock(IdentityBindingService.class);
         PlatformSessionService platformSessionService = mock(PlatformSessionService.class);
-        WechatWorkLoginFlowService service = new WechatWorkLoginFlowService(
+        WechatWorkLoginFlowService service = newService(
                 enabledProperties(),
                 apiClient,
                 identityBindingService,
@@ -305,5 +324,18 @@ class WechatWorkLoginFlowServiceTest {
         properties.setAgentId("100001");
         properties.setCallbackBaseUrl("https://login.fr24.example");
         return properties;
+    }
+
+    private WechatWorkLoginFlowService newService(WechatWorkAuthProperties properties,
+                                                  WechatWorkApiClient apiClient,
+                                                  IdentityBindingService identityBindingService,
+                                                  PlatformSessionService platformSessionService) {
+        return new WechatWorkLoginFlowService(
+                properties,
+                new AuthMethodVisibilityProperties(),
+                apiClient,
+                identityBindingService,
+                platformSessionService
+        );
     }
 }

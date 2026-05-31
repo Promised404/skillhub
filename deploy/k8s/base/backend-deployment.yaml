@@ -139,6 +139,44 @@ spec:
                   key: oauth2-github-client-secret
                   optional: true
 
+            # WeCom / Enterprise WeChat scan login (optional)
+            - name: SKILLHUB_AUTH_WECHATWORK_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-wechatwork-enabled
+            - name: SKILLHUB_AUTH_WECHATWORK_CORP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-wechatwork-corp-id
+            - name: SKILLHUB_AUTH_WECHATWORK_AGENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-wechatwork-agent-id
+            - name: SKILLHUB_AUTH_WECHATWORK_CORP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: skillhub-auth-wechatwork-corp-secret
+                  optional: true
+            - name: SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-wechatwork-callback-base-url
+            - name: SKILLHUB_AUTH_WECHATWORK_DISPLAY_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-wechatwork-display-name
+            - name: SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-methods-visible-providers
+
           volumeMounts:
             - name: skillhub-storage
               mountPath: /var/lib/skillhub/storage

@@ -113,6 +113,7 @@ validate_boolean SESSION_COOKIE_SECURE
 validate_boolean BOOTSTRAP_ADMIN_ENABLED
 validate_boolean SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
 validate_boolean SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+validate_boolean SKILLHUB_AUTH_WECHATWORK_ENABLED
 
 validate_port POSTGRES_PORT
 validate_port REDIS_PORT
@@ -152,6 +153,22 @@ fi
 
 if [ -n "${DEVICE_AUTH_VERIFICATION_URI:-}" ]; then
   validate_url DEVICE_AUTH_VERIFICATION_URI
+fi
+
+if [ "${SKILLHUB_AUTH_WECHATWORK_ENABLED:-false}" = "true" ]; then
+  require_non_empty SKILLHUB_AUTH_WECHATWORK_CORP_ID
+  require_non_empty SKILLHUB_AUTH_WECHATWORK_AGENT_ID
+  require_non_empty SKILLHUB_AUTH_WECHATWORK_CORP_SECRET
+  require_non_empty SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL
+  validate_url SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL
+  validate_no_trailing_slash SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL
+  reject_values SKILLHUB_AUTH_WECHATWORK_CORP_SECRET "replace-me" "change-me"
+  if [ "${SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS:-}" != "wechatwork" ]; then
+    warn "SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS is not wechatwork; other login methods may remain visible"
+  fi
+  if [ "${BOOTSTRAP_ADMIN_ENABLED:-false}" = "true" ] && [ "${SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS:-}" = "wechatwork" ]; then
+    warn "Bootstrap local admin is not reachable while only wechatwork is visible; complete bootstrap before enforcing WeCom-only login"
+  fi
 fi
 
 if [ "${SESSION_COOKIE_SECURE:-true}" != "true" ]; then

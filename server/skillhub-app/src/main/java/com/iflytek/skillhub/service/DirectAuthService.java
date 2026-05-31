@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.service;
 
+import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
@@ -20,13 +21,16 @@ import org.springframework.stereotype.Service;
 public class DirectAuthService {
 
     private final DirectAuthProperties properties;
+    private final AuthMethodVisibilityProperties authMethodVisibilityProperties;
     private final Map<String, DirectAuthProvider> providersByCode;
     private final SessionBootstrapService sessionBootstrapService;
 
     public DirectAuthService(DirectAuthProperties properties,
+                             AuthMethodVisibilityProperties authMethodVisibilityProperties,
                              List<DirectAuthProvider> providers,
                              SessionBootstrapService sessionBootstrapService) {
         this.properties = properties;
+        this.authMethodVisibilityProperties = authMethodVisibilityProperties;
         this.providersByCode = providers.stream()
             .collect(java.util.stream.Collectors.toUnmodifiableMap(
                 DirectAuthProvider::providerCode,
@@ -41,6 +45,9 @@ public class DirectAuthService {
                                           HttpServletRequest request) {
         if (!properties.isEnabled()) {
             throw new ForbiddenException("error.auth.direct.disabled");
+        }
+        if (!authMethodVisibilityProperties.allows(providerCode)) {
+            throw new ForbiddenException("error.auth.method.disabled");
         }
 
         DirectAuthProvider provider = providersByCode.get(providerCode);

@@ -195,9 +195,43 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 - 外部对象存储通过 `SKILLHUB_STORAGE_S3_*` 注入
 - 前端反代和运行时 API 地址通过 `SKILLHUB_API_UPSTREAM` / `SKILLHUB_WEB_API_BASE_URL` 注入
 - 如果要开放真实登录，再补充 `OAUTH2_GITHUB_CLIENT_ID` / `OAUTH2_GITHUB_CLIENT_SECRET`
+- 如果要启用 FR24 私有化员工登录，再补充 WeCom / 企业微信扫码登录变量，见下文
 - 如果要启用密码重置验证码邮件，参见：`docs/19-smtp-password-reset-email-setup.md`
 
-## 8 OIDC 登录配置
+## 8 FR24 WeCom 登录配置
+
+FR24 私有化部署使用企业微信 PC 浏览器扫码 / 跳转授权登录。后端只会在完整配置
+WeCom 企业 ID、应用 ID、应用 Secret 和回调根地址后，才向前端暴露 WeCom 登录方式。
+
+Compose 发布环境在 `.env.release` 中配置：
+
+```bash
+SKILLHUB_PUBLIC_BASE_URL=https://skillhub.fr24.example
+SESSION_COOKIE_SECURE=true
+
+SKILLHUB_AUTH_WECHATWORK_ENABLED=true
+SKILLHUB_AUTH_WECHATWORK_CORP_ID=<fr24-corp-id>
+SKILLHUB_AUTH_WECHATWORK_AGENT_ID=<wecom-agent-id>
+SKILLHUB_AUTH_WECHATWORK_CORP_SECRET=<wecom-app-secret>
+SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL=https://skillhub.fr24.example
+SKILLHUB_AUTH_WECHATWORK_DISPLAY_NAME=WeCom
+
+# FR24 员工入口只显示企业微信登录，隐藏本地密码、注册和其他 OAuth 入口。
+SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS=wechatwork
+SKILLHUB_AUTH_DIRECT_ENABLED=false
+SKILLHUB_WEB_AUTH_DIRECT_ENABLED=false
+```
+
+企业微信管理后台需要把 `SKILLHUB_AUTH_WECHATWORK_CALLBACK_BASE_URL` 对应的 HTTPS
+域名配置为该应用可信回调域名。SkillHub 实际回调路径为
+`/api/v1/auth/wechatwork/callback`。
+
+如果需要使用 bootstrap admin 做首次平台管理，请在启用
+`SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS=wechatwork` 前完成登录和管理员绑定；或在临时初始化窗口把
+`SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS` 设为 `wechatwork,local`。正式开放员工入口前应恢复为
+`wechatwork`，避免本地账号注册或登录绕过企业微信。
+
+## 9 OIDC 登录配置
 
 SkillHub 复用 Spring Security OAuth2 Client 的 OIDC 支持。前端不需要单独
 配置回调页；登录页会从 `/api/v1/auth/methods` 读取后端暴露的
@@ -237,7 +271,7 @@ override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `
 容器。Kubernetes 部署同理，将这些变量放入 `backend-deployment.yaml` 的
 `server` 容器环境变量或统一的配置管理系统中。
 
-## 9 裸金属上线清单
+## 10 裸金属上线清单
 
 推荐顺序：
 
@@ -247,6 +281,7 @@ override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `
    - 打开 `80` / `443`，避免直接暴露 `5432` / `6379`
 2. 填写 `.env.release`
    - `SKILLHUB_PUBLIC_BASE_URL` 填最终 HTTPS 域名，且不要带尾部 `/`
+   - FR24 私有化环境填写 `SKILLHUB_AUTH_WECHATWORK_*`，并把 `SKILLHUB_AUTH_METHODS_VISIBLE_PROVIDERS` 设为 `wechatwork`
    - `SKILLHUB_STORAGE_PROVIDER=s3`
    - 按云厂商 OSS / S3 兼容参数填写 `SKILLHUB_STORAGE_S3_*`
    - 设置非默认的 `POSTGRES_PASSWORD`
@@ -263,7 +298,7 @@ override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `
    - 立即修改管理员密码
    - 如果后续完全走 OAuth，可将 `BOOTSTRAP_ADMIN_ENABLED=false`
 
-## 10 可观测性
+## 11 可观测性
 
 | 维度 | 方案 |
 |------|------|
@@ -271,7 +306,7 @@ override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `
 | 日志 | 容器 stdout / stderr |
 | 指标 | Spring Boot Actuator，后续可接 Prometheus |
 
-## 11 安全扫描服务
+## 12 安全扫描服务
 
 如果要启用 `skill-scanner` 后端链路，当前仓库建议按下面的方式部署：
 
@@ -292,7 +327,7 @@ override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `
 - `scripts/verify-scanner.sh`
 - `docs/security-scanning.md`
 
-## 12 数据迁移
+## 13 数据迁移
 
 Flyway 仍是唯一 schema 变更入口：
 
