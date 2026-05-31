@@ -7,6 +7,7 @@ import { LoginButton } from '@/features/auth/login-button'
 import { SessionBootstrapEntry } from '@/features/auth/session-bootstrap-entry'
 import { useAuthMethods } from '@/features/auth/use-auth-methods'
 import { usePasswordLogin } from '@/features/auth/use-password-login'
+import { getPrivateSsoRuntimeConfig } from '@/features/auth/use-private-sso-config'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -26,8 +27,10 @@ export function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [twoFactorCode, setTwoFactorCode] = useState('')
   const [fieldErrors, setFieldErrors] = useState<{ username?: string, password?: string }>({})
   const isChinese = i18n.resolvedLanguage?.split('-')[0] === 'zh'
+  const privateSsoConfig = getPrivateSsoRuntimeConfig()
   const { data: authMethods } = useAuthMethods(search.returnTo)
 
   const returnTo = search.returnTo && search.returnTo.startsWith('/') ? search.returnTo : '/dashboard'
@@ -56,7 +59,7 @@ export function LoginPage() {
 
     setFieldErrors({})
     try {
-      await loginMutation.mutateAsync({ username: trimmedUsername, password })
+      await loginMutation.mutateAsync({ username: trimmedUsername, password, twoFactorCode: twoFactorCode || undefined })
       await navigate({ to: returnTo })
     } catch {
       // mutation state drives the error UI
@@ -90,7 +93,9 @@ export function LoginPage() {
 
             <Tabs defaultValue="password" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="password">{t('login.tabPassword')}</TabsTrigger>
+                <TabsTrigger value="password">
+                  {directAuthConfig.enabled ? t('login.tabEnterprise') : t('login.tabPassword')}
+                </TabsTrigger>
                 <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger>
               </TabsList>
 
@@ -154,6 +159,18 @@ export function LoginPage() {
                       <p className="text-sm text-red-600">{fieldErrors.password}</p>
                     ) : null}
                   </div>
+                  {privateSsoConfig.twoFactorEnabled && directAuthConfig.enabled ? (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium" htmlFor="twoFactorCode">{t('login.twoFactorCode')}</label>
+                      <Input
+                        id="twoFactorCode"
+                        autoComplete="one-time-code"
+                        value={twoFactorCode}
+                        onChange={(event) => setTwoFactorCode(event.target.value)}
+                        placeholder={t('login.twoFactorPlaceholder')}
+                      />
+                    </div>
+                  ) : null}
                   {loginMutation.error ? (
                     <p className="text-sm text-red-600">{loginMutation.error.message}</p>
                   ) : null}
@@ -161,20 +178,26 @@ export function LoginPage() {
                     {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
                   </Button>
                   <p className="text-center text-sm">
-                    <Link to="/reset-password" className="font-medium text-primary hover:underline">
-                      {t('login.forgotPassword')}
-                    </Link>
+                    {!directAuthConfig.enabled ? (
+                      <Link to="/reset-password" className="font-medium text-primary hover:underline">
+                        {t('login.forgotPassword')}
+                      </Link>
+                    ) : null}
                   </p>
                   <p className="text-center text-sm text-muted-foreground">
-                    {t('login.noAccount')}
-                    {' '}
-                    <Link
-                      to="/register"
-                      search={{ returnTo }}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {t('login.register')}
-                    </Link>
+                    {!directAuthConfig.enabled ? (
+                      <>
+                        {t('login.noAccount')}
+                        {' '}
+                        <Link
+                          to="/register"
+                          search={{ returnTo }}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {t('login.register')}
+                        </Link>
+                      </>
+                    ) : null}
                   </p>
                 </form>
               </TabsContent>

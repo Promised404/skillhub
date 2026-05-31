@@ -227,7 +227,10 @@
     "agreementPrefix": "登录即表示你同意我们的",
     "terms": "服务条款",
     "and": "和",
-    "privacy": "隐私政策"
+    "privacy": "隐私政策",
+    "twoFactorCode": "验证码",
+    "twoFactorPlaceholder": "输入二次验证码",
+    "tabEnterprise": "企业账号"
   },
   "register": {
     "title": "创建账号",
@@ -1485,7 +1488,9 @@
       },
       "direct": {
         "disabled": "直连认证兼容层未启用",
-        "providerUnsupported": "当前登录方式不受支持"
+        "providerUnsupported": "当前登录方式不受支持",
+        "invalid2faCode": "验证码错误，请重新输入",
+        "ssoUnavailable": "认证服务暂时不可用，请稍后重试"
       },
       "sessionBootstrap": {
         "disabled": "会话引导能力未启用",

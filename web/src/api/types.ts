@@ -50,6 +50,7 @@ export type CreateTokenResponse = Omit<components['schemas']['TokenCreateRespons
 export interface LocalLoginRequest {
   username: string
   password: string
+  twoFactorCode?: string
 }
 
 export interface LocalRegisterRequest extends LocalLoginRequest {

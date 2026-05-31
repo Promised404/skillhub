@@ -407,6 +407,7 @@ export const authApi = {
         provider,
         username: request.username,
         password: request.password,
+        twoFactorCode: request.twoFactorCode,
       }),
     })
   },

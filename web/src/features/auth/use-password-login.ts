@@ -3,19 +3,26 @@ import { authApi, getDirectAuthRuntimeConfig } from '@/api/client'
 import { ApiError } from '@/shared/lib/api-error'
 import type { LocalLoginRequest, User } from '@/api/types'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
+import { encryptPassword } from './use-sm2-encrypt'
+import { getPrivateSsoRuntimeConfig } from './use-private-sso-config'
 
-/**
- * Password-login mutation that can switch between local auth and direct upstream auth based on
- * runtime configuration.
- */
 export function usePasswordLogin() {
   const queryClient = useQueryClient()
   const directAuthConfig = getDirectAuthRuntimeConfig()
+  const privateSsoConfig = getPrivateSsoRuntimeConfig()
 
   return useMutation({
     mutationFn: (request: LocalLoginRequest) => {
       if (directAuthConfig.enabled && directAuthConfig.provider) {
-        return authApi.directLogin(directAuthConfig.provider, request)
+        let password = request.password
+        if (privateSsoConfig.sm2PublicKey) {
+          password = encryptPassword(request.password, privateSsoConfig.sm2PublicKey)
+        }
+        return authApi.directLogin(directAuthConfig.provider, {
+          username: request.username,
+          password,
+          twoFactorCode: request.twoFactorCode,
+        })
       }
       return authApi.localLogin(request)
     },
@@ -24,8 +31,6 @@ export function usePasswordLogin() {
       queryClient.setQueryData<User | null>(['auth', 'me'], user)
     },
     onError: (error) => {
-      // Keep invalid credentials on the login page instead of falling back to the
-      // global 401 redirect handler used for background API requests.
       if (error instanceof ApiError) {
         return
       }

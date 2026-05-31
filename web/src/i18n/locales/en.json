@@ -227,7 +227,10 @@
     "agreementPrefix": "By logging in, you agree to our",
     "terms": "Terms of Service",
     "and": "and",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "twoFactorCode": "Verification Code",
+    "twoFactorPlaceholder": "Enter 2FA code",
+    "tabEnterprise": "Enterprise SSO"
   },
   "register": {
     "title": "Create Account",
@@ -1484,7 +1487,9 @@
       },
       "direct": {
         "disabled": "Direct authentication compatibility is disabled",
-        "providerUnsupported": "This login method is not supported"
+        "providerUnsupported": "This login method is not supported",
+        "invalid2faCode": "Verification code is incorrect",
+        "ssoUnavailable": "Authentication service is temporarily unavailable, please try again later"
       },
       "sessionBootstrap": {
         "disabled": "Session bootstrap is disabled",
