@@ -80,6 +80,9 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      sm-crypto:
+        specifier: ^0.4.0
+        version: 0.4.0
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1867,6 +1870,9 @@ packages:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
 
+  jsbn@1.1.0:
+    resolution: {integrity: sha512-4bYVV3aAMtDTTu4+xsDYa6sy9GyJ69/amsu9sYF2zqjiEoZA5xJi3BrfX3uY+/IekIu7MwdObdbDWpoZdBv3/A==}
+
   jsdom@29.1.1:
     resolution: {integrity: sha512-ECi4Fi2f7BdJtUKTflYRTiaMxIB0O6zfR1fX0GXpUrf6flp8QIYn1UT20YQqdSOfk2dfkCwS8LAFoJDEppNK5Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24.0.0}
@@ -2500,6 +2506,9 @@ packages:
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
+
+  sm-crypto@0.4.0:
+    resolution: {integrity: sha512-OexH2V1EqmhXuOIPGoCl55OjMF0wwPUM/zhUjT0Q6vHBeopSRvTNRy76/1eRoFs3VBKt39hdFnxwpFmooHYa2A==}
 
   sonner@2.0.7:
     resolution: {integrity: sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==}
@@ -4578,6 +4587,8 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
+  jsbn@1.1.0: {}
+
   jsdom@29.1.1:
     dependencies:
       '@asamuzakjp/css-color': 5.1.11
@@ -5463,6 +5474,10 @@ snapshots:
   siginfo@2.0.0: {}
 
   slash@3.0.0: {}
+
+  sm-crypto@0.4.0:
+    dependencies:
+      jsbn: 1.1.0
 
   sonner@2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
