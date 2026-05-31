@@ -98,6 +98,16 @@ skillhub:
       enabled: ${SKILLHUB_AUTH_MOCK_ENABLED:false}
     direct:
       enabled: ${SKILLHUB_AUTH_DIRECT_ENABLED:false}
+    private-sso:
+      base-url: ${SKILLHUB_AUTH_PRIVATE_SSO_BASE_URL:}
+      connect-timeout: ${SKILLHUB_AUTH_PRIVATE_SSO_CONNECT_TIMEOUT:5s}
+      read-timeout: ${SKILLHUB_AUTH_PRIVATE_SSO_READ_TIMEOUT:10s}
+      sm2-public-key: ${SKILLHUB_AUTH_PRIVATE_SSO_SM2_PUBLIC_KEY:}
+      two-factor:
+        enabled: ${SKILLHUB_AUTH_PRIVATE_SSO_TWO_FACTOR_ENABLED:false}
+      identity:
+        provider-code: ${SKILLHUB_AUTH_PRIVATE_SSO_IDENTITY_PROVIDER_CODE:private-sso}
+        initial-status: ${SKILLHUB_AUTH_PRIVATE_SSO_IDENTITY_INITIAL_STATUS:ACTIVE}
     session-bootstrap:
       enabled: ${SKILLHUB_AUTH_SESSION_BOOTSTRAP_ENABLED:false}
     password-reset:
