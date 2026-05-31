@@ -77,10 +77,7 @@ export function LoginPage() {
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="w-full max-w-md space-y-8 animate-fade-up">
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <span className="fr24-logo-surface flex h-12 w-28 items-center justify-center rounded-lg px-3">
-              <img src={appBrand.logoUrl} alt={appBrand.companyShortName} className="max-h-6 w-auto" />
-            </span>
+          <div className="mb-4">
             <span className="text-2xl font-bold text-brand-gradient">{appBrand.displayName}</span>
           </div>
           <h1 className="text-4xl font-bold font-heading text-foreground">{t('login.title')}</h1>
