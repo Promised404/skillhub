@@ -3,6 +3,7 @@ package com.iflytek.skillhub.service;
 import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
 import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
+import com.iflytek.skillhub.auth.oauth.OAuthClientRegistrationPolicy;
 import com.iflytek.skillhub.auth.oauth.OAuthLoginRedirectSupport;
 import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthProperties;
 import com.iflytek.skillhub.config.AuthSessionBootstrapProperties;
@@ -14,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.stereotype.Service;
 
 /**
@@ -75,6 +76,7 @@ public class AuthMethodCatalog {
         return new ArrayList<>(oAuth2ClientProperties.getRegistration().entrySet().stream()
             .sorted(Comparator.comparing(entry -> entry.getKey()))
             .filter(entry -> authMethodVisibilityProperties.allows(entry.getKey()))
+            .filter(entry -> OAuthClientRegistrationPolicy.isUsable(entry.getValue()))
             .map(entry -> new AuthProviderResponse(
                 entry.getKey(),
                 entry.getValue().getClientName() != null && !entry.getValue().getClientName().isBlank()
@@ -102,6 +104,7 @@ public class AuthMethodCatalog {
         oAuth2ClientProperties.getRegistration().entrySet().stream()
             .sorted(Comparator.comparing(entry -> entry.getKey()))
             .filter(entry -> authMethodVisibilityProperties.allows(entry.getKey()))
+            .filter(entry -> OAuthClientRegistrationPolicy.isUsable(entry.getValue()))
             .forEach(entry -> methods.add(new AuthMethodResponse(
                 "oauth-" + entry.getKey(),
                 "OAUTH_REDIRECT",

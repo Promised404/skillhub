@@ -32,6 +32,7 @@ export function LoginPage() {
   const { data: authMethods, isLoading: isLoadingAuthMethods } = useAuthMethods(search.returnTo)
   const methodList = authMethods ?? []
   const oauthMethods = methodList.filter((method) => method.methodType === 'OAUTH_REDIRECT')
+  const hasOAuthMethods = oauthMethods.length > 0
   const passwordMethods = methodList.filter((method) =>
     method.methodType === 'PASSWORD' || method.methodType === 'DIRECT_PASSWORD')
   const isWechatWorkOnly = oauthMethods.length === 1
@@ -47,6 +48,7 @@ export function LoginPage() {
       method.methodType === 'DIRECT_PASSWORD' && method.provider === directAuthConfig.provider)
     : undefined
   const bootstrapMethod = methodList.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
+  const showOAuthTab = hasOAuthMethods
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -108,9 +110,11 @@ export function LoginPage() {
               </div>
             ) : (
               <Tabs defaultValue="password" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className={`grid w-full ${showOAuthTab ? 'grid-cols-2' : 'grid-cols-1'}`}>
                   <TabsTrigger value="password">{t('login.tabPassword')}</TabsTrigger>
-                  <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger>
+                  {showOAuthTab ? (
+                    <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger>
+                  ) : null}
                 </TabsList>
 
                 <TabsContent value="password">
@@ -198,12 +202,14 @@ export function LoginPage() {
                   </form>
                 </TabsContent>
 
-                <TabsContent value="oauth" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {t('login.oauthHint')}
-                  </p>
-                  <LoginButton returnTo={returnTo} />
-                </TabsContent>
+                {showOAuthTab ? (
+                  <TabsContent value="oauth" className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      {t('login.oauthHint')}
+                    </p>
+                    <LoginButton returnTo={returnTo} methods={oauthMethods} />
+                  </TabsContent>
+                ) : null}
               </Tabs>
             )}
           </div>

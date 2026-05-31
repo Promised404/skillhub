@@ -145,8 +145,30 @@ describe('LoginPage', () => {
     expect(html).toContain('login.title')
     expect(html).toContain('login.subtitle')
     expect(html).toContain('login.tabPassword')
+    expect(html).toContain('login.tabOAuth')
     expect(html).toContain('login.submit')
     expect(html).toContain('login.register')
+  })
+
+  it('omits OAuth UI when the backend exposes no OAuth methods', () => {
+    useAuthMethodsMock.mockReturnValue({
+      data: [
+        {
+          id: 'password',
+          methodType: 'PASSWORD',
+          provider: 'local',
+          displayName: 'Local Account',
+          actionUrl: '/api/auth/login',
+        },
+      ],
+      isLoading: false,
+    })
+
+    const html = renderToStaticMarkup(<LoginPage />)
+
+    expect(html).toContain('login.tabPassword')
+    expect(html).not.toContain('login.tabOAuth')
+    expect(html).not.toContain('login-button:')
   })
 
   it('keeps password UI when direct auth runtime is enabled', () => {
@@ -177,7 +199,7 @@ describe('LoginPage', () => {
     const html = renderToStaticMarkup(<LoginPage />)
 
     expect(html).toContain('login.tabPassword')
-    expect(html).toContain('login.tabOAuth')
+    expect(html).not.toContain('login.tabOAuth')
     expect(html).not.toContain('Enterprise WeCom Login')
   })
 })

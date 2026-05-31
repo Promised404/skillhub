@@ -7,10 +7,11 @@ import com.iflytek.skillhub.auth.bootstrap.PassiveSessionAuthenticator;
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
-import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthProperties;
 import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
+import com.iflytek.skillhub.auth.wechatwork.WechatWorkAuthProperties;
 import com.iflytek.skillhub.config.AuthSessionBootstrapProperties;
 import com.iflytek.skillhub.config.DirectAuthProperties;
+import com.iflytek.skillhub.dto.AuthProviderResponse;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -173,5 +174,37 @@ class AuthMethodCatalogTest {
         assertThat(missingCallbackCatalog.listMethods(null))
             .extracting(method -> method.id())
             .doesNotContain("oauth-wechatwork");
+    }
+
+    @Test
+    void listMethodsShouldSkipPlaceholderOAuthRegistrations() {
+        OAuth2ClientProperties oauthProperties = new OAuth2ClientProperties();
+        OAuth2ClientProperties.Registration github = new OAuth2ClientProperties.Registration();
+        github.setClientId("placeholder");
+        github.setClientSecret("placeholder");
+        github.setClientName("GitHub");
+        OAuth2ClientProperties.Registration oidc = new OAuth2ClientProperties.Registration();
+        oidc.setClientId("real-client");
+        oidc.setClientSecret("real-secret");
+        oidc.setClientName("Company OIDC");
+        oauthProperties.getRegistration().put("github", github);
+        oauthProperties.getRegistration().put("oidc", oidc);
+
+        AuthMethodCatalog catalog = new AuthMethodCatalog(
+            oauthProperties,
+            new DirectAuthProperties(),
+            new AuthSessionBootstrapProperties(),
+            List.of(),
+            List.of()
+        );
+
+        assertThat(catalog.listMethods(null))
+            .extracting(method -> method.id())
+            .contains("oauth-oidc")
+            .doesNotContain("oauth-github");
+        assertThat(catalog.listOAuthProviders(null))
+            .extracting(AuthProviderResponse::id)
+            .contains("oidc")
+            .doesNotContain("github");
     }
 }

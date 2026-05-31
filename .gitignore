@@ -79,10 +79,7 @@ docs/agents/
 docs/prds/
 docs/requirements/
 docs/review/
-docs/superpowers/
 
-# Local workspace metadata
-CLAUDE.md
 
 # Local config file
 .mcp.json

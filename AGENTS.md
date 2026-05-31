@@ -207,6 +207,14 @@ skillhub/
 
 ## Critical Rules
 
+### Subagent Model Policy
+
+- All subagents in this project should use `gpt-5.5`.
+- Prefer omitting the `model` field when spawning subagents so they inherit from a `gpt-5.5`
+  parent thread.
+- If a subagent model must be specified explicitly, set `model: "gpt-5.5"`.
+- Do not use `gpt-5.3-codex` for subagents unless the user explicitly requests it.
+
 ### Do Not Manually Edit Generated Files
 
 - `web/src/api/generated/schema.d.ts` — regenerated via `make generate-api`

@@ -35,8 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
     "spring.security.oauth2.client.registration.github.client-name=GitHub",
-    "spring.security.oauth2.client.registration.gitee.client-id=placeholder",
-    "spring.security.oauth2.client.registration.gitee.client-secret=placeholder",
+    "spring.security.oauth2.client.registration.gitee.client-id=gitee-client",
+    "spring.security.oauth2.client.registration.gitee.client-secret=gitee-secret",
     "spring.security.oauth2.client.registration.gitee.provider=gitee",
     "spring.security.oauth2.client.registration.gitee.authorization-grant-type=authorization_code",
     "spring.security.oauth2.client.registration.gitee.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}",
@@ -142,12 +142,11 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/v1/auth/providers"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
-            .andExpect(jsonPath("$.data.length()").value(3))
-            .andExpect(jsonPath("$.data[*].id", hasItems("github", "gitee", "gitlab")))
+            .andExpect(jsonPath("$.data.length()").value(2))
+            .andExpect(jsonPath("$.data[*].id", hasItems("github", "gitee")))
             .andExpect(jsonPath("$.data[*].authorizationUrl", hasItems(
                 "/oauth2/authorization/github",
-                "/oauth2/authorization/gitee",
-                "/oauth2/authorization/gitlab"
+                "/oauth2/authorization/gitee"
             )))
             .andExpect(jsonPath("$.timestamp").isNotEmpty())
             .andExpect(jsonPath("$.requestId").isNotEmpty());

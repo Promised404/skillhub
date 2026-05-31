@@ -73,6 +73,26 @@ class OAuth2AuthorizationRequestResolverTest {
         assertThat(request.getSession(false)).isNull();
     }
 
+    @Test
+    void resolve_returnsNullWhenProviderUsesPlaceholderCredentials() {
+        OAuthLoginFlowService oauthLoginFlowService = new OAuthLoginFlowService(
+                java.util.List.of(),
+                mock(AccessPolicy.class),
+                mock(IdentityBindingService.class)
+        );
+        resolver = newResolver(oauthLoginFlowService, new AuthMethodVisibilityProperties(), clientRegistration(
+                "github",
+                "placeholder",
+                "placeholder"
+        ));
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/oauth2/authorization/github");
+
+        OAuth2AuthorizationRequest authorizationRequest = resolver.resolve(request, "github");
+
+        assertThat(authorizationRequest).isNull();
+        assertThat(request.getSession(false)).isNull();
+    }
+
     private SkillHubOAuth2AuthorizationRequestResolver newResolver(
             OAuthLoginFlowService oauthLoginFlowService,
             AuthMethodVisibilityProperties visibilityProperties) {
@@ -93,5 +113,31 @@ class OAuth2AuthorizationRequestResolverTest {
                 oauthLoginFlowService,
                 visibilityProperties
         );
+    }
+
+    private SkillHubOAuth2AuthorizationRequestResolver newResolver(
+            OAuthLoginFlowService oauthLoginFlowService,
+            AuthMethodVisibilityProperties visibilityProperties,
+            ClientRegistration clientRegistration) {
+        return new SkillHubOAuth2AuthorizationRequestResolver(
+                new InMemoryClientRegistrationRepository(clientRegistration),
+                oauthLoginFlowService,
+                visibilityProperties
+        );
+    }
+
+    private ClientRegistration clientRegistration(String registrationId, String clientId, String clientSecret) {
+        return ClientRegistration.withRegistrationId(registrationId)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .authorizationUri("https://example.test/oauth/authorize")
+                .tokenUri("https://example.test/oauth/token")
+                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                .userInfoUri("https://example.test/user")
+                .userNameAttributeName("id")
+                .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+                .scope("read:user")
+                .clientName(registrationId)
+                .build();
     }
 }

@@ -2,6 +2,9 @@ package com.iflytek.skillhub.auth.oauth;
 
 import com.iflytek.skillhub.auth.config.AuthMethodVisibilityProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -18,6 +21,7 @@ public class SkillHubOAuth2AuthorizationRequestResolver
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
     private final OAuthLoginFlowService oauthLoginFlowService;
     private final AuthMethodVisibilityProperties authMethodVisibilityProperties;
+    private final Map<String, ClientRegistration> clientRegistrations;
 
     public SkillHubOAuth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository,
                                                       OAuthLoginFlowService oauthLoginFlowService,
@@ -28,12 +32,13 @@ public class SkillHubOAuth2AuthorizationRequestResolver
         );
         this.oauthLoginFlowService = oauthLoginFlowService;
         this.authMethodVisibilityProperties = authMethodVisibilityProperties;
+        this.clientRegistrations = indexClientRegistrations(clientRegistrationRepository);
     }
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
         String registrationId = extractRegistrationId(request);
-        if (registrationId != null && !authMethodVisibilityProperties.allows(registrationId)) {
+        if (registrationId != null && !isAllowedAndUsable(registrationId)) {
             return null;
         }
         OAuth2AuthorizationRequest authorizationRequest = delegate.resolve(request);
@@ -45,7 +50,7 @@ public class SkillHubOAuth2AuthorizationRequestResolver
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
-        if (!authMethodVisibilityProperties.allows(clientRegistrationId)) {
+        if (!isAllowedAndUsable(clientRegistrationId)) {
             return null;
         }
         OAuth2AuthorizationRequest authorizationRequest = delegate.resolve(request, clientRegistrationId);
@@ -53,6 +58,24 @@ public class SkillHubOAuth2AuthorizationRequestResolver
             oauthLoginFlowService.rememberReturnTo(request);
         }
         return authorizationRequest;
+    }
+
+    private boolean isAllowedAndUsable(String clientRegistrationId) {
+        return authMethodVisibilityProperties.allows(clientRegistrationId)
+                && OAuthClientRegistrationPolicy.isUsable(clientRegistrations.get(clientRegistrationId));
+    }
+
+    private Map<String, ClientRegistration> indexClientRegistrations(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        Map<String, ClientRegistration> registrations = new HashMap<>();
+        if (clientRegistrationRepository instanceof Iterable<?> iterable) {
+            for (Object item : iterable) {
+                if (item instanceof ClientRegistration registration) {
+                    registrations.put(registration.getRegistrationId(), registration);
+                }
+            }
+        }
+        return registrations;
     }
 
     private String extractRegistrationId(HttpServletRequest request) {
