@@ -61,6 +61,8 @@ describe('Layout', () => {
 
     expect(html).toContain(appBrand.displayName)
     expect(html).toContain(appBrand.logoUrl)
+    expect(html).toContain(`href="${appBrand.homepageUrl}"`)
+    expect(html).toContain('target="_blank"')
     expect(html).toMatch(/<img[^>]*alt="FR24(?:\s+logo)?"/)
   })
 })

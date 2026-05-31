@@ -73,8 +73,14 @@ export function Layout() {
 
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md">
+        <div className="flex items-center gap-2.5">
+          <a
+            href={appBrand.homepageUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`${appBrand.companyShortName} website`}
+            className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md"
+          >
             <img
               src={appBrand.logoUrl}
               alt={`${appBrand.companyShortName} logo`}
@@ -82,11 +88,11 @@ export function Layout() {
               height={20}
               className="h-5 w-[92px] object-contain"
             />
-          </span>
-          <span className="text-lg font-semibold tracking-tight text-brand-gradient">
+          </a>
+          <Link to="/" className="text-lg font-semibold tracking-tight text-brand-gradient">
             {appBrand.productName}
-          </span>
-        </Link>
+          </Link>
+        </div>
 
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-normal" style={{ color: 'hsl(var(--text-secondary))' }}>
           {navItems.map((item) => {
@@ -149,7 +155,13 @@ export function Layout() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 md:gap-12">
             <div className="flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
-                <span className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md">
+                <a
+                  href={appBrand.homepageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${appBrand.companyShortName} website`}
+                  className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md"
+                >
                   <img
                     src={appBrand.logoUrl}
                     alt={`${appBrand.companyShortName} logo`}
@@ -157,7 +169,7 @@ export function Layout() {
                     height={20}
                     className="h-5 w-[92px] object-contain"
                   />
-                </span>
+                </a>
                 <span className="text-lg font-bold text-brand-gradient">{appBrand.displayName}</span>
               </div>
               <p className="text-sm max-w-xs" style={{ color: 'hsl(var(--text-secondary))' }}>
