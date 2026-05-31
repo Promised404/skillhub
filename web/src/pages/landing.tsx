@@ -92,7 +92,7 @@ export function LandingPage() {
     <>
       {/* Hero Section */}
       <main ref={heroView.ref} className={`relative z-10 flex flex-col items-center pt-16 pb-20 px-4 md:pt-24 scroll-fade-up${heroView.inView ? ' in-view' : ''}`}>
-        <span className="mb-5 inline-flex h-10 w-[120px] items-center justify-center rounded-md bg-slate-900">
+        <span className="fr24-logo-surface mb-5 inline-flex h-10 w-[120px] items-center justify-center rounded-md">
           <img
             src={appBrand.logoUrl}
             alt={`${appBrand.companyShortName} logo`}

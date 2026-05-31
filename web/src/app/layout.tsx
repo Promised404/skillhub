@@ -74,7 +74,7 @@ export function Layout() {
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md bg-slate-900">
+          <span className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md">
             <img
               src={appBrand.logoUrl}
               alt={`${appBrand.companyShortName} logo`}
@@ -149,7 +149,7 @@ export function Layout() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 md:gap-12">
             <div className="flex-shrink-0">
               <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md bg-slate-900">
+                <span className="fr24-logo-surface inline-flex h-8 w-[104px] shrink-0 items-center justify-center rounded-md">
                   <img
                     src={appBrand.logoUrl}
                     alt={`${appBrand.companyShortName} logo`}
