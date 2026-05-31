@@ -7,7 +7,7 @@ function setMockWindow(runtimeConfig?: Record<string, string | undefined>) {
     configurable: true,
     writable: true,
     value: {
-      __skillhub_runtime_config__: runtimeConfig,
+      __SKILLHUB_RUNTIME_CONFIG__: runtimeConfig,
     },
   })
 }
@@ -39,7 +39,7 @@ describe('getPrivateSsoRuntimeConfig', () => {
   })
 
   it('should return twoFactorEnabled=true when flag is set', () => {
-    window.__skillhub_runtime_config__ = {
+    window.__SKILLHUB_RUNTIME_CONFIG__ = {
       authPrivateSsoTwoFactorEnabled: 'true',
       authPrivateSsoSm2PublicKey: 'test-public-key',
     }

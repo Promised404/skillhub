@@ -1479,6 +1479,10 @@
   },
   "error": {
     "auth": {
+      "invalidCredentials": "用户名或密码错误",
+      "invalid2faCode": "验证码错误，请重新输入",
+      "accountDisabled": "该账号已被禁用",
+      "ssoUnavailable": "认证服务暂时不可用，请稍后重试",
       "local": {
         "invalidCredentials": "用户名或密码错误",
         "accountDisabled": "该账号已被禁用",

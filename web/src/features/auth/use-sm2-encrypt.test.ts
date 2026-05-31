@@ -11,6 +11,7 @@ describe('encryptPassword', () => {
     expect(result).toBeTruthy()
     expect(typeof result).toBe('string')
     expect(result.length).toBeGreaterThan(0)
+    expect(result.startsWith('04')).toBe(true)
     vi.useRealTimers()
   })
 

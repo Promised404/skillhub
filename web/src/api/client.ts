@@ -63,6 +63,8 @@ type RuntimeConfig = {
   authSessionBootstrapEnabled?: string
   authSessionBootstrapProvider?: string
   authSessionBootstrapAuto?: string
+  authPrivateSsoTwoFactorEnabled?: string
+  authPrivateSsoSm2PublicKey?: string
 }
 
 declare global {

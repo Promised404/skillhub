@@ -1,7 +1,6 @@
 package com.iflytek.skillhub.auth.privatesso;
 
 import com.iflytek.skillhub.auth.exception.AuthFlowException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,12 +11,10 @@ public class PrivateSsoClient {
 
     private final WebClient webClient;
     private final PrivateSsoProperties properties;
-    private final ObjectMapper objectMapper;
 
-    public PrivateSsoClient(WebClient webClient, PrivateSsoProperties properties, ObjectMapper objectMapper) {
+    public PrivateSsoClient(WebClient webClient, PrivateSsoProperties properties) {
         this.webClient = webClient;
         this.properties = properties;
-        this.objectMapper = objectMapper;
     }
 
     public SsoUser authenticate(String username, String encryptedPassword, String twoFactorCode) {

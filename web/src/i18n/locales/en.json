@@ -1478,6 +1478,10 @@
   },
   "error": {
     "auth": {
+      "invalidCredentials": "Incorrect username or password",
+      "invalid2faCode": "Verification code is incorrect",
+      "accountDisabled": "This account has been disabled",
+      "ssoUnavailable": "Authentication service is temporarily unavailable, please try again later",
       "local": {
         "invalidCredentials": "Incorrect username or password",
         "accountDisabled": "This account has been disabled",

@@ -11,5 +11,5 @@ export function encryptPassword(password: string, publicKey: string): string {
   const timestamp = Date.now()
   const plaintext = `${password}-${timestamp}`
   const encrypted = sm2.doEncrypt(plaintext, publicKey)
-  return encrypted
+  return '04' + encrypted
 }

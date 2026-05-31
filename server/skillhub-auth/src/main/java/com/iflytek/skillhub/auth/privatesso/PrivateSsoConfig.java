@@ -1,6 +1,5 @@
 package com.iflytek.skillhub.auth.privatesso;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -21,9 +20,8 @@ public class PrivateSsoConfig {
 
     @Bean
     public PrivateSsoClient privateSsoClient(WebClient privateSsoWebClient,
-                                              PrivateSsoProperties properties,
-                                              ObjectMapper objectMapper) {
-        return new PrivateSsoClient(privateSsoWebClient, properties, objectMapper);
+                                              PrivateSsoProperties properties) {
+        return new PrivateSsoClient(privateSsoWebClient, properties);
     }
 
     @Bean
