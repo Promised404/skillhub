@@ -21,7 +21,7 @@
 | `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoIdentityService.java` | Maps SSO user to SkillHub user via `IdentityBindingService` |
 | `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoDirectAuthProvider.java` | Implements `DirectAuthProvider`, orchestrates client + identity |
 | `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoConfig.java` | `@Configuration` with `@ConditionalOnProperty` + WebClient bean |
-| `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/PrivateSsoAuthProperties.java` | Exposes `skillhub.auth.private-sso.sm2-public-key` + `two-factor.enabled` to `skillhub-app` config |
+| `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/package-info.java` | Package documentation |
 
 ### Create (backend tests)
 
@@ -149,10 +149,27 @@ public class PrivateSsoProperties {
 Run: `cd /Users/pengtao/IdeaProjects/skillhub/server && mvn test -pl skillhub-auth -Dtest=PrivateSsoPropertiesTest -DfailIfNoTests=false -q`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Add package-info.java**
+
+Create `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/package-info.java`:
+
+```java
+/**
+ * Private SSO integration via the DirectAuthProvider SPI.
+ * Conditionally loaded when skillhub.auth.private-sso.base-url is set.
+ */
+package com.iflytek.skillhub.auth.privatesso;
+```
+
+- [ ] **Step 6: Re-run test to verify nothing broke**
+
+Run: `cd /Users/pengtao/IdeaProjects/skillhub/server && mvn test -pl skillhub-auth -Dtest=PrivateSsoPropertiesTest -DfailIfNoTests=false -q`
+Expected: PASS
+
+- [ ] **Step 7: Commit**
 
 ```bash
-git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoProperties.java server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoPropertiesTest.java
+git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoProperties.java server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/privatesso/package-info.java server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/privatesso/PrivateSsoPropertiesTest.java
 git commit -m "feat(auth): add PrivateSsoProperties configuration class"
 ```
 
@@ -493,7 +510,7 @@ class PrivateSsoIdentityServiceTest {
         PlatformPrincipal expected = new PlatformPrincipal("usr_1", "张三", "zhangsan@company.com", "https://avatar.test/a.png", "private-sso", Set.of("USER"));
         when(identityBindingService.bindOrCreate(any(OAuthClaims.class), any(UserStatus.class))).thenReturn(expected);
 
-        PlatformPrincipal result = service.resolveOrCreate(ssoUser);
+        PlatformPrincipal result = service.resolveOrCreate(ssoUser, identityConfig);
 
         assertThat(result).isEqualTo(expected);
 
@@ -513,7 +530,7 @@ class PrivateSsoIdentityServiceTest {
         when(identityBindingService.bindOrCreate(any(OAuthClaims.class), any(UserStatus.class)))
                 .thenThrow(new AccountDisabledException());
 
-        assertThatThrownBy(() -> service.resolveOrCreate(ssoUser))
+        assertThatThrownBy(() -> service.resolveOrCreate(ssoUser, identityConfig))
                 .isInstanceOf(AccountDisabledException.class);
     }
 
@@ -524,7 +541,7 @@ class PrivateSsoIdentityServiceTest {
         PlatformPrincipal expected = new PlatformPrincipal("usr_1", "张三", "zhangsan@company.com", null, "my-company-sso", Set.of("USER"));
         when(identityBindingService.bindOrCreate(any(OAuthClaims.class), any(UserStatus.class))).thenReturn(expected);
 
-        service.resolveOrCreate(ssoUser);
+        service.resolveOrCreate(ssoUser, identityConfig);
 
         ArgumentCaptor<OAuthClaims> claimsCaptor = ArgumentCaptor.forClass(OAuthClaims.class);
         verify(identityBindingService).bindOrCreate(claimsCaptor.capture(), any(UserStatus.class));
@@ -1260,25 +1277,40 @@ git commit -m "feat(web): add 2FA field, SM2 encryption, and hide local auth lin
 
 - [ ] **Step 1: Run all backend tests**
 
-Run: `cd /Users/pengtao/IdeaProjects/skillhub/server && mvn test -q`
+Run: `cd /Users/pengtao/IdeaProjects/skillhub && make test-backend-app`
 Expected: All tests pass
 
 - [ ] **Step 2: Run all frontend tests**
 
-Run: `cd /Users/pengtao/IdeaProjects/skillhub/web && pnpm test -- --run`
+Run: `cd /Users/pengtao/IdeaProjects/skillhub && make test-frontend`
 Expected: All tests pass
 
-- [ ] **Step 3: Verify backend compiles**
+- [ ] **Step 3: Run frontend typecheck**
 
-Run: `cd /Users/pengtao/IdeaProjects/skillhub/server && mvn compile -q`
-Expected: SUCCESS
+Run: `cd /Users/pengtao/IdeaProjects/skillhub && make typecheck-web`
+Expected: No type errors
 
-- [ ] **Step 4: Verify frontend builds**
+- [ ] **Step 4: Run frontend lint**
+
+Run: `cd /Users/pengtao/IdeaProjects/skillhub && make lint-web`
+Expected: No lint errors
+
+- [ ] **Step 5: Verify frontend builds**
 
 Run: `cd /Users/pengtao/IdeaProjects/skillhub/web && pnpm build`
 Expected: Build succeeds
 
-- [ ] **Step 5: Final commit if any fixes needed**
+- [ ] **Step 6: Regenerate OpenAPI types if DTOs changed**
+
+Run: `cd /Users/pengtao/IdeaProjects/skillhub && make generate-api`
+
+If `web/src/api/generated/schema.d.ts` changed, commit it:
+```bash
+git add web/src/api/generated/schema.d.ts
+git commit -m "chore(web): regenerate OpenAPI types after DirectLoginRequest change"
+```
+
+- [ ] **Step 7: Final commit if any other fixes needed**
 
 ```bash
 git add -A
