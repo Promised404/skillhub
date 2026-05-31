@@ -99,7 +99,7 @@ skillhub:
     direct:
       enabled: ${SKILLHUB_AUTH_DIRECT_ENABLED:false}
     private-sso:
-      base-url: ${SKILLHUB_AUTH_PRIVATE_SSO_BASE_URL:}
+      # base-url is intentionally absent; set SKILLHUB_AUTH_PRIVATE_SSO_BASE_URL env var to enable private-sso
       connect-timeout: ${SKILLHUB_AUTH_PRIVATE_SSO_CONNECT_TIMEOUT:5s}
       read-timeout: ${SKILLHUB_AUTH_PRIVATE_SSO_READ_TIMEOUT:10s}
       sm2-public-key: ${SKILLHUB_AUTH_PRIVATE_SSO_SM2_PUBLIC_KEY:}
