@@ -26,6 +26,8 @@ function ensureRuntimeConfigFallback() {
       authSessionBootstrapEnabled: 'false',
       authSessionBootstrapProvider: '',
       authSessionBootstrapAuto: 'false',
+      authPrivateSsoTwoFactorEnabled: 'false',
+      authPrivateSsoSm2PublicKey: '',
     }
   }
 }

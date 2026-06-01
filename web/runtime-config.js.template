@@ -5,5 +5,7 @@ window.__SKILLHUB_RUNTIME_CONFIG__ = {
   authDirectProvider: "${SKILLHUB_WEB_AUTH_DIRECT_PROVIDER}",
   authSessionBootstrapEnabled: "${SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_ENABLED}",
   authSessionBootstrapProvider: "${SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_PROVIDER}",
-  authSessionBootstrapAuto: "${SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO}"
+  authSessionBootstrapAuto: "${SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO}",
+  authPrivateSsoTwoFactorEnabled: "${SKILLHUB_WEB_AUTH_PRIVATE_SSO_TWO_FACTOR_ENABLED}",
+  authPrivateSsoSm2PublicKey: "${SKILLHUB_WEB_AUTH_PRIVATE_SSO_SM2_PUBLIC_KEY}"
 };
