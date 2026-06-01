@@ -14,6 +14,7 @@
 | 2FA 机制 | Google Authenticator (OMS) | 此端点仅服务 OMS 用户 |
 | TGC/Cookie | 不创建 | SkillHub 自行管理会话，SSO 仅负责认证 |
 | Controller | 独立 `SsoAuthenticateController` | 与遗留 SSOController 隔离，职责单一 |
+| 密码连续失败锁定 | 不使用 LoginManage | 现有 OMS 登录无此机制，保持一致；仅 Google Auth 有独立锁定 |
 
 ## 新增文件
 
@@ -23,6 +24,8 @@
 | `AuthenticateRequest.java` | `fr_f_sso_provider/dto/` | 请求 DTO |
 | `AuthenticateResponse.java` | `fr_f_sso_provider/dto/` | 成功响应 DTO |
 | `ErrorResponse.java` | `fr_f_sso_provider/dto/` | 错误响应 DTO |
+| `AuthenticateException.java` | `fr_f_sso_provider/dto/` | 认证异常类 |
+| `DecryptedPassword.java` | `fr_f_sso_api/util/` | 解密结果 record (与 Sm2Util 同包) |
 | `SsoAuthenticateExceptionHandler.java` | `fr_f_sso_provider/controller/` | 全局异常处理 |
 
 ## 修改文件
@@ -30,7 +33,17 @@
 | 文件 | 变更 |
 |------|------|
 | `web.xml` | DispatcherServlet 新增 `/api/*` url-pattern |
-| `Sm2Util.java` | 新增 `decryptAndPassword()` 静态方法，提取 SM2 解密 + 时间戳校验逻辑 |
+| `Sm2Util.java` | 新增 `decryptAndPassword()` 静态方法，提取 SM2 解密 + 时间戳校验逻辑（异常时抛出 AuthenticateException） |
+
+## Dubbo 依赖
+
+新 Controller 需注入以下已有 Dubbo 服务（均已在 `dubbo-account-ref.xml` 中声明）：
+
+| Bean | 接口 | 用途 |
+|------|------|------|
+| `userFacade` | `UserFacade` | 密码验证 |
+| `distributorFacade` | `DistributorFacade` | 检查 Google Auth 全局开关 |
+| `ssoService` | `SSOService` | 登录权限校验 |
 
 ## 认证流程
 
@@ -44,13 +57,9 @@
   │     复用 Sm2Util.decryptAndPassword()
   │     └─ 解密失败或 timestamp 过期（>5min）→ 400 INVALID_REQUEST
   │
-  ├─ 3. 连续失败锁定检查
-  │     复用 LoginManage.getTryCount()
-  │     └─ tryCount >= 10 → 403 ACCOUNT_LOCKED
-  │
-  ├─ 4. 密码验证
-  │     构建 UserInfoDTO(type=1/OMS), 调用 userFacade.validateUser()
-  │     └─ 验证失败 → 递增失败计数, 映射返回码:
+  ├─ 3. 密码验证
+  │     构建 UserInfoDTO(userType=1/DISTRIBUTOR), 调用 userFacade.validateUser()
+  │     └─ 验证失败映射返回码:
   │         806004 → 401 INVALID_CREDENTIALS
   │         806009 → 401 INVALID_CREDENTIALS
   │         806007 → 403 ACCOUNT_DISABLED
@@ -59,17 +68,22 @@
   │         806013 → 403 ACCOUNT_DISABLED（Okta 用户拦截）
   │         其他非0 → 401 INVALID_CREDENTIALS
   │
+  ├─ 4. 登录权限校验
+  │     调用 ssoService.authorize(validateUser, domain)
+  │     └─ 无权限 → 403 ACCOUNT_DISABLED
+  │
   ├─ 5. Google Authenticator 2FA 校验
-  │     检查用户 googleKey 是否存在:
-  │     ├─ googleKey 为空 → 跳过 2FA，直接成功
-  │     └─ googleKey 不为空:
-  │         ├─ twoFactorCode 为 null → 401 INVALID_2FA_CODE
-  │         └─ twoFactorCode 非 null → GoogleCodeManage 校验
+  │     先检查全局开关 distributorFacade.omsValidGoogleCode():
+  │     ├─ 全局未启用 → 跳过 2FA，直接成功
+  │     └─ 全局已启用:
+  │         ├─ 先检查失败锁定: tryCount >= 6 → 403 ACCOUNT_LOCKED
+  │         ├─ twoFactorCode 为 null/空 → 401 INVALID_2FA_CODE
+  │         └─ twoFactorCode 非 null → GoogleAuthenticatorUtils.verify() 校验
   │             ├─ 连续 6 次失败 → 5 分钟锁定 → 403 ACCOUNT_LOCKED
   │             └─ 验证码错误 → 401 INVALID_2FA_CODE
   │
   ├─ 6. 成功响应
-  │     清除失败计数，构建 AuthenticateResponse:
+  │     构建 AuthenticateResponse:
   │     uid = String.valueOf(validateUser.getId())
   │     username = validateUser.getUsername()
   │     displayName = validateUser.getRealName() ?: username
@@ -130,7 +144,7 @@ Content-Type: application/json
 | 401 | `INVALID_CREDENTIALS` | 用户名或密码错误 | 密码验证失败 |
 | 401 | `INVALID_2FA_CODE` | 验证码错误 | Google Auth 验证码错误或缺失 |
 | 403 | `ACCOUNT_DISABLED` | 账号已被禁用 | 账号禁用 / 密码过期 / Okta 用户 |
-| 403 | `ACCOUNT_LOCKED` | 连续登录失败次数过多，账号临时锁定 | 密码连续失败10次 或 Google Auth 连续失败6次 |
+| 403 | `ACCOUNT_LOCKED` | 连续登录失败次数过多，账号临时锁定 | Google Auth 连续失败6次 |
 | 500 | `INTERNAL_ERROR` | 服务内部错误 | 未预期的异常 |
 
 ## SM2 工具方法提取
@@ -159,19 +173,19 @@ public static DecryptedPassword decryptAndPassword(String encrypted, String priv
 
 ## Google Authenticator 校验
 
-复用现有 `GoogleCodeManage`，逻辑对应 `SSOController.login()` 第 320-370 行:
+复用现有 `GoogleCodeManage` + `GoogleAuthenticatorUtils`，逻辑对应 `SSOController.login()` 第 287-308 行:
 
-1. 判断 `validateUser.getGoogleKey()` 是否为空
-2. 非空时检查 `twoFactorCode` 是否提供
-3. 通过 `GoogleCodeManage.validateCode()` 校验
-4. 连续失败 6 次触发 5 分钟锁定
+1. 检查全局开关 `distributorFacade.omsValidGoogleCode()`
+2. 全局启用时检查 `twoFactorCode` 是否提供
+3. 通过 `GoogleAuthenticatorUtils.verify(validateUser.getGoogleKey(), twoFactorCode)` 校验
+4. 失败计数由 `GoogleCodeManage` 管理，连续 6 次触发 5 分钟锁定
 
 ## 连续失败锁定
 
-复用 `LoginManage`:
-- 密码验证失败后递增计数 (`addTryCount`)
-- Google Auth 验证失败不计入 LoginManage（已有独立的 GoogleCodeManage 计数）
-- 认证成功后清除计数 (`clearTryCount`)
+不对 OMS 密码验证引入 LoginManage 锁定，保持与现有 OMS 登录行为一致。仅 Google Auth 有独立的失败锁定机制：
+
+- Google Auth 连续失败由 `GoogleCodeManage` 管理（6 次 → 5 分钟锁定）
+- 密码验证失败不做计数和锁定
 
 ## URL 路由变更
 
@@ -199,9 +213,10 @@ public static DecryptedPassword decryptAndPassword(String encrypted, String priv
    - 密码错误 → 401 INVALID_CREDENTIALS
    - 账号禁用 → 403 ACCOUNT_DISABLED
    - Okta 用户 → 403 ACCOUNT_DISABLED
+   - 无登录权限 → 403 ACCOUNT_DISABLED
    - 有 Google Auth 但未传 twoFactorCode → 401 INVALID_2FA_CODE
    - Google Auth 验证码错误 → 401 INVALID_2FA_CODE
-   - 连续失败锁定 → 403 ACCOUNT_LOCKED
+   - Google Auth 连续失败锁定 → 403 ACCOUNT_LOCKED
    - 成功 → 200 + 完整用户信息
    - 无 Google Auth 的用户成功 → 200（无需 twoFactorCode）
 
