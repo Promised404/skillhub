@@ -135,14 +135,24 @@ public class AuthenticateException extends RuntimeException {
 }
 ```
 
-- [ ] **Step 4: Create `DecryptedPassword` record**
+- [ ] **Step 4: Create `DecryptedPassword` class**
 
 Create `fr_f_sso_api/src/main/java/com/flightroutes/flight/sso/util/DecryptedPassword.java`:
 
 ```java
 package com.flightroutes.flight.sso.util;
 
-public record DecryptedPassword(String password) {
+public class DecryptedPassword {
+
+    private final String password;
+
+    public DecryptedPassword(String password) {
+        this.password = password;
+    }
+
+    public String password() {
+        return password;
+    }
 }
 ```
 
@@ -153,7 +163,7 @@ Add this method to `fr_f_sso_api/src/main/java/com/flightroutes/flight/sso/util/
 ```java
 public static DecryptedPassword decryptAndPassword(String encrypted, String privateKey) {
     String decrypted = decrypt(encrypted, privateKey);
-    if (StringUtils.isBlank(decrypted)) {
+    if (decrypted == null || decrypted.trim().isEmpty()) {
         throw new AuthenticateException(400, "INVALID_REQUEST", "请求参数不合法");
     }
     String[] parts = decrypted.split("-");
@@ -176,10 +186,10 @@ public static DecryptedPassword decryptAndPassword(String encrypted, String priv
 Required imports to add at top of Sm2Util.java:
 ```java
 import com.flightroutes.flight.sso.exception.AuthenticateException;
-import org.apache.commons.lang3.StringUtils;
+import cn.hutool.core.util.StrUtil;
 ```
 
-Note: The existing `Sm2Util` uses undefined `StringUtils` — check if it's already imported. The `TimeUtil.DECRYPT_TIME_THRESHOLD` constant is `10 * 60 * 1000L` (10 minutes). The spec mentions 5 minutes but the existing code uses 10 — we align with the existing code to avoid breaking the current SSO login flow.
+Note: Replace all `StringUtils.isBlank`/`isNotBlank` with `StrUtil.isBlank`/`isNotBlank` from Hutool, which is already a project dependency. The `TimeUtil.DECRYPT_TIME_THRESHOLD` constant is `10 * 60 * 1000L` (10 minutes). The spec mentions 5 minutes but the existing code uses 10 — we align with the existing code to avoid breaking the current SSO login flow.
 
 - [ ] **Step 6: Run test to verify it passes**
 
@@ -476,7 +486,7 @@ import com.flightroutes.flight.sso.service.SSOService;
 import com.flightroutes.flight.sso.util.Sm2Util;
 import com.flightroutes.flight.sso.config.UpdateLoginConfig;
 import com.flightroutes.flight.utils.GoogleAuthenticatorUtils;
-import org.apache.commons.lang3.StringUtils;
+import cn.hutool.core.util.StrUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -508,7 +518,7 @@ public class SsoAuthenticateController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthenticateRequest request) {
         // 1. 参数校验
-        if (StringUtils.isBlank(request.getUsername()) || StringUtils.isBlank(request.getPassword())) {
+        if (StrUtil.isBlank(request.getUsername()) || StrUtil.isBlank(request.getPassword())) {
             return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "请求参数不合法");
         }
 
@@ -545,7 +555,7 @@ public class SsoAuthenticateController {
             if (tryCount >= GoogleCodeManage.MAX_TRY) {
                 return error(HttpStatus.FORBIDDEN, "ACCOUNT_LOCKED", "连续登录失败次数过多，账号临时锁定");
             }
-            if (StringUtils.isBlank(request.getTwoFactorCode())) {
+            if (StrUtil.isBlank(request.getTwoFactorCode())) {
                 return error(HttpStatus.UNAUTHORIZED, "INVALID_2FA_CODE", "验证码错误");
             }
             boolean verified = GoogleAuthenticatorUtils.verify(validateUser.getGoogleKey(), request.getTwoFactorCode());
@@ -560,7 +570,7 @@ public class SsoAuthenticateController {
         AuthenticateResponse response = new AuthenticateResponse(
                 String.valueOf(validateUser.getId()),
                 validateUser.getUsername(),
-                StringUtils.isNotBlank(validateUser.getRealName()) ? validateUser.getRealName() : validateUser.getUsername(),
+                StrUtil.isNotBlank(validateUser.getRealName()) ? validateUser.getRealName() : validateUser.getUsername(),
                 validateUser.getRegisterEmail(),
                 null
         );
@@ -580,11 +590,18 @@ public class SsoAuthenticateController {
             return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "用户名或密码错误");
         }
         int code = validateUser.getCode();
-        return switch (code) {
-            case 806004, 806009, 806011 -> error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "用户名或密码错误");
-            case 806007, 806012, 806013 -> error(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED", "账号已被禁用");
-            default -> error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "用户名或密码错误");
-        };
+        switch (code) {
+            case 806004:
+            case 806009:
+            case 806011:
+                return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "用户名或密码错误");
+            case 806007:
+            case 806012:
+            case 806013:
+                return error(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED", "账号已被禁用");
+            default:
+                return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "用户名或密码错误");
+        }
     }
 }
 ```
