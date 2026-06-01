@@ -2,7 +2,9 @@ package com.iflytek.skillhub.auth.privatesso;
 
 import com.iflytek.skillhub.auth.direct.DirectAuthProvider;
 import com.iflytek.skillhub.auth.direct.DirectAuthRequest;
+import com.iflytek.skillhub.auth.exception.AuthFlowException;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
+import org.springframework.http.HttpStatus;
 
 public class PrivateSsoDirectAuthProvider implements DirectAuthProvider {
 
@@ -30,7 +32,14 @@ public class PrivateSsoDirectAuthProvider implements DirectAuthProvider {
 
     @Override
     public PlatformPrincipal authenticate(DirectAuthRequest request) {
-        SsoUser ssoUser = client.authenticate(request.username(), request.password(), request.twoFactorCode());
-        return identityService.resolveOrCreate(ssoUser, identityConfig);
+        try {
+            SsoUser ssoUser = client.authenticate(request.username(), request.password(), request.twoFactorCode());
+            return identityService.resolveOrCreate(ssoUser, identityConfig);
+        } catch (AuthFlowException e) {
+            if (e.getStatus() == HttpStatus.FORBIDDEN) {
+                identityService.disableUserByLoginName(identityConfig.getProviderCode(), request.username());
+            }
+            throw e;
+        }
     }
 }

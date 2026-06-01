@@ -15,6 +15,10 @@ public class PrivateSsoIdentityService {
         this.identityBindingService = identityBindingService;
     }
 
+    public void disableUserByLoginName(String providerCode, String loginName) {
+        identityBindingService.disableUserByProviderLogin(providerCode, loginName);
+    }
+
     public PlatformPrincipal resolveOrCreate(SsoUser ssoUser, PrivateSsoProperties.Identity identityConfig) {
         Map<String, Object> extra = new HashMap<>();
         if (ssoUser.avatarUrl() != null) {

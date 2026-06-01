@@ -25,14 +25,10 @@ class PrivateSsoClientTest {
     void setUp() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-        PrivateSsoProperties props = new PrivateSsoProperties();
-        props.setBaseUrl(mockWebServer.url("/").toString());
-        props.setConnectTimeout(java.time.Duration.ofSeconds(5));
-        props.setReadTimeout(java.time.Duration.ofSeconds(10));
         WebClient webClient = WebClient.builder()
-                .baseUrl(props.getBaseUrl())
+                .baseUrl(mockWebServer.url("/").toString())
                 .build();
-        client = new PrivateSsoClient(webClient, props);
+        client = new PrivateSsoClient(webClient);
     }
 
     @AfterEach
@@ -122,12 +118,8 @@ class PrivateSsoClientTest {
 
     @Test
     void authenticate_shouldThrowSsoUnavailable_onNetworkError() {
-        PrivateSsoProperties props = new PrivateSsoProperties();
-        props.setBaseUrl("http://localhost:1");
-        props.setConnectTimeout(java.time.Duration.ofSeconds(1));
-        props.setReadTimeout(java.time.Duration.ofSeconds(1));
-        WebClient webClient = WebClient.builder().baseUrl(props.getBaseUrl()).build();
-        PrivateSsoClient failingClient = new PrivateSsoClient(webClient, props);
+        WebClient webClient = WebClient.builder().baseUrl("http://localhost:1").build();
+        PrivateSsoClient failingClient = new PrivateSsoClient(webClient);
 
         assertThatThrownBy(() -> failingClient.authenticate("zhangsan", "pw", null))
                 .isInstanceOf(AuthFlowException.class)

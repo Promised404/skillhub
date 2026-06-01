@@ -1,7 +1,6 @@
 package com.iflytek.skillhub.auth.privatesso;
 
 import com.iflytek.skillhub.auth.exception.AuthFlowException;
-import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -10,11 +9,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class PrivateSsoClient {
 
     private final WebClient webClient;
-    private final PrivateSsoProperties properties;
 
-    public PrivateSsoClient(WebClient webClient, PrivateSsoProperties properties) {
+    public PrivateSsoClient(WebClient webClient) {
         this.webClient = webClient;
-        this.properties = properties;
     }
 
     public SsoUser authenticate(String username, String encryptedPassword, String twoFactorCode) {
@@ -25,7 +22,7 @@ public class PrivateSsoClient {
                     .bodyValue(request)
                     .retrieve()
                     .toEntity(SsoUser.class)
-                    .block(Duration.ofMillis(properties.getConnectTimeout().toMillis() + properties.getReadTimeout().toMillis()));
+                    .block();
 
             if (response == null || !response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new AuthFlowException(HttpStatus.BAD_GATEWAY, "error.auth.ssoUnavailable");

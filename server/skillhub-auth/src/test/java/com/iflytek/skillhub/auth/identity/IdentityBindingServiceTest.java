@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import com.iflytek.skillhub.auth.entity.IdentityBinding;
 import com.iflytek.skillhub.auth.entity.Role;
@@ -178,5 +179,43 @@ class IdentityBindingServiceTest {
 
         assertThatThrownBy(() -> service.createPendingUserIfAbsent(claims))
                 .isInstanceOf(AccountDisabledException.class);
+    }
+
+    @Test
+    void disableUserByProviderLogin_disablesActiveUser() {
+        IdentityBinding binding = new IdentityBinding("usr_1", "private-sso", "U10042", "zhangsan");
+        UserAccount user = new UserAccount("usr_1", "zhangsan", "zhangsan@company.com", null);
+
+        when(bindingRepo.findByProviderCodeAndLoginName("private-sso", "zhangsan")).thenReturn(Optional.of(binding));
+        when(userRepo.findById("usr_1")).thenReturn(Optional.of(user));
+        when(userRepo.save(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.disableUserByProviderLogin("private-sso", "zhangsan");
+
+        assertThat(user.getStatus()).isEqualTo(UserStatus.DISABLED);
+        verify(userRepo).save(user);
+    }
+
+    @Test
+    void disableUserByProviderLogin_skipsAlreadyDisabledUser() {
+        IdentityBinding binding = new IdentityBinding("usr_1", "private-sso", "U10042", "zhangsan");
+        UserAccount user = new UserAccount("usr_1", "zhangsan", "zhangsan@company.com", null);
+        user.setStatus(UserStatus.DISABLED);
+
+        when(bindingRepo.findByProviderCodeAndLoginName("private-sso", "zhangsan")).thenReturn(Optional.of(binding));
+        when(userRepo.findById("usr_1")).thenReturn(Optional.of(user));
+
+        service.disableUserByProviderLogin("private-sso", "zhangsan");
+
+        verify(userRepo, never()).save(any());
+    }
+
+    @Test
+    void disableUserByProviderLogin_doesNothingWhenNoBinding() {
+        when(bindingRepo.findByProviderCodeAndLoginName("private-sso", "unknown")).thenReturn(Optional.empty());
+
+        service.disableUserByProviderLogin("private-sso", "unknown");
+
+        verify(userRepo, never()).save(any());
     }
 }

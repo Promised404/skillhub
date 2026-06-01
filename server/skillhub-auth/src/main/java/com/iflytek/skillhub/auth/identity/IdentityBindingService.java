@@ -71,6 +71,22 @@ public class IdentityBindingService {
             bindingRepo.save(binding);
         }
 
+        return buildPrincipal(user, claims.provider());
+    }
+
+    @Transactional
+    public void disableUserByProviderLogin(String providerCode, String loginName) {
+        bindingRepo.findByProviderCodeAndLoginName(providerCode, loginName)
+                .ifPresent(binding -> {
+                    UserAccount user = userRepo.findById(binding.getUserId()).orElse(null);
+                    if (user != null && user.getStatus() != UserStatus.DISABLED) {
+                        user.setStatus(UserStatus.DISABLED);
+                        userRepo.save(user);
+                    }
+                });
+    }
+
+    private PlatformPrincipal buildPrincipal(UserAccount user, String provider) {
         if (user.getStatus() == UserStatus.PENDING) {
             throw new com.iflytek.skillhub.auth.oauth.AccountPendingException();
         }
@@ -85,7 +101,7 @@ public class IdentityBindingService {
 
         return new PlatformPrincipal(
             user.getId(), user.getDisplayName(), user.getEmail(),
-            user.getAvatarUrl(), claims.provider(), roles
+            user.getAvatarUrl(), provider, roles
         );
     }
 

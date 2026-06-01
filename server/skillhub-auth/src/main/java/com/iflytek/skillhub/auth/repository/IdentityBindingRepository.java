@@ -11,5 +11,6 @@ import java.util.Optional;
 @Repository
 public interface IdentityBindingRepository extends JpaRepository<IdentityBinding, Long> {
     Optional<IdentityBinding> findByProviderCodeAndSubject(String providerCode, String subject);
+    Optional<IdentityBinding> findByProviderCodeAndLoginName(String providerCode, String loginName);
     java.util.List<IdentityBinding> findByUserId(String userId);
 }

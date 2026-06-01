@@ -90,4 +90,10 @@ class PrivateSsoIdentityServiceTest {
         verify(identityBindingService).bindOrCreate(claimsCaptor.capture(), any(UserStatus.class));
         assertThat(claimsCaptor.getValue().extra()).doesNotContainKey("avatar_url");
     }
+
+    @Test
+    void disableUserByLoginName_shouldDelegateToIdentityBindingService() {
+        service.disableUserByLoginName("private-sso", "zhangsan");
+        verify(identityBindingService).disableUserByProviderLogin("private-sso", "zhangsan");
+    }
 }
