@@ -1,4 +1,4 @@
-# Private SSO /api/sso/authenticate 接口设计文档
+# Private SSO /api/sso/authenticate.do 接口设计文档
 
 ## 概述
 
@@ -8,7 +8,7 @@
 
 | 决策项 | 选择 | 原因 |
 |--------|------|------|
-| URL 路由 | web.xml 新增 `/api/*` 映射 | 保持与现有 `*.do` 端点隔离，支持无后缀 REST URL |
+| URL 路由 | 使用 `*.do` 后缀 (`/api/sso/authenticate.do`) | 与现有 SSO Tomcat 路由约定一致，无需修改 web.xml |
 | 响应格式 | HTTP 状态码 + 扁平 JSON | 匹配 spec 定义，标准 REST 实践 |
 | uid 映射 | `UserInfoDTO.id` (Long→String) | 不可变、全局唯一，跨系统稳定 |
 | 2FA 机制 | Google Authenticator (OMS) | 此端点仅服务 OMS 用户 |
@@ -96,7 +96,7 @@
 ## 请求格式
 
 ```
-POST /api/sso/authenticate
+POST /api/sso/authenticate.do
 Content-Type: application/json
 ```
 
@@ -189,20 +189,14 @@ public static DecryptedPassword decryptAndPassword(String encrypted, String priv
 
 ## URL 路由变更
 
-在 `web.xml` 中为现有 DispatcherServlet 追加 `/api/*` 映射:
+无需修改 `web.xml`，使用现有 `*.do` url-pattern 即可路由到新的 Controller：
 
 ```xml
 <servlet-mapping>
     <servlet-name>springmvc</servlet-name>
     <url-pattern>*.do</url-pattern>
 </servlet-mapping>
-<servlet-mapping>
-    <servlet-name>springmvc</servlet-name>
-    <url-pattern>/api/*</url-pattern>
-</servlet-mapping>
 ```
-
-两个 url-pattern 共享同一个 DispatcherServlet 和 Spring 上下文，新 Controller 自动被发现（`springmvc-servlet.xml` 已配置扫描 `com.flightroutes.flight.sso` 包下的 `@Controller`）。
 
 ## 测试策略
 

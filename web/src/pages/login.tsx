@@ -35,10 +35,6 @@ export function LoginPage() {
 
   const returnTo = search.returnTo && search.returnTo.startsWith('/') ? search.returnTo : '/dashboard'
   const disabledMessage = search.reason === 'accountDisabled' ? t('apiError.auth.accountDisabled') : null
-  const directMethod = directAuthConfig.provider
-    ? authMethods?.find((method) =>
-      method.methodType === 'DIRECT_PASSWORD' && method.provider === directAuthConfig.provider)
-    : undefined
   const bootstrapMethod = authMethods?.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -101,13 +97,6 @@ export function LoginPage() {
 
               <TabsContent value="password">
                 <form className="space-y-4" onSubmit={handleSubmit}>
-                  {directAuthConfig.enabled ? (
-                    <p className="text-sm text-muted-foreground">
-                      {t('login.passwordCompatHint', {
-                        name: directMethod?.displayName ?? directAuthConfig.provider,
-                      })}
-                    </p>
-                  ) : null}
                   <div className="space-y-2">
                     <label className="text-sm font-medium" htmlFor="username">{t('login.username')}</label>
                     <Input

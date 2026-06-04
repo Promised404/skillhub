@@ -10,7 +10,7 @@ SkillHub private deployment needs to support enterprise SSO login so that users 
 
 SkillHub requires the company SSO to expose one primary endpoint. The interface is designed by translating the ref-project `UserFacade.validateUser()` + `SSOController.login()` logic into a REST equivalent.
 
-### POST /api/sso/authenticate
+### POST /api/sso/authenticate.do
 
 ```
 Content-Type: application/json
@@ -84,7 +84,7 @@ Frontend encrypts password with SM2 public key before submission. Encrypted plai
 ```
 com.iflytek.skillhub.auth.privatesso/
 ├── PrivateSsoDirectAuthProvider.java    // implements DirectAuthProvider
-├── PrivateSsoClient.java               // REST client for SSO /api/sso/authenticate
+├── PrivateSsoClient.java               // REST client for SSO /api/sso/authenticate.do
 ├── PrivateSsoProperties.java           // @ConfigurationProperties
 └── PrivateSsoIdentityService.java      // delegates to IdentityBindingService
 ```
@@ -94,7 +94,7 @@ com.iflytek.skillhub.auth.privatesso/
 User submits username + password (+ optional 2FA code) to `POST /api/v1/auth/direct/login`:
 
 1. `PrivateSsoDirectAuthProvider.authenticate(DirectAuthRequest)` is called
-2. `PrivateSsoClient` calls `SSO POST /api/sso/authenticate`
+2. `PrivateSsoClient` calls `SSO POST /api/sso/authenticate.do`
 3. SSO returns 200 with `{uid, username, displayName, email, avatarUrl}`
 4. `PrivateSsoIdentityService` calls `IdentityBindingService.bindOrCreate()`:
    - First login: creates `user_account(ACTIVE)` + `identity_binding(provider_code='private-sso', subject=uid)`

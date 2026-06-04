@@ -200,7 +200,7 @@
     "clear": "Clear search"
   },
   "login": {
-    "title": "Login to SkillHub",
+    "title": "Login to FR24 SkillHub",
     "subtitle": "Choose a method to continue",
     "tabPassword": "Password",
     "tabOAuth": "OAuth",
@@ -229,8 +229,8 @@
     "and": "and",
     "privacy": "Privacy Policy",
     "twoFactorCode": "Verification Code",
-    "twoFactorPlaceholder": "Enter 2FA code",
-    "tabEnterprise": "Enterprise SSO"
+    "twoFactorPlaceholder": "Enter dynamic verification code",
+    "tabEnterprise": "FR24 Account"
   },
   "register": {
     "title": "Create Account",

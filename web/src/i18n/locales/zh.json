@@ -200,7 +200,7 @@
     "clear": "清空搜索"
   },
   "login": {
-    "title": "登录 SkillHub",
+    "title": "登录 FR24 SkillHub",
     "subtitle": "选择一个方式登录以继续",
     "tabPassword": "账号密码",
     "tabOAuth": "OAuth",
@@ -229,8 +229,8 @@
     "and": "和",
     "privacy": "隐私政策",
     "twoFactorCode": "验证码",
-    "twoFactorPlaceholder": "输入二次验证码",
-    "tabEnterprise": "企业账号"
+    "twoFactorPlaceholder": "输入动态验证码",
+    "tabEnterprise": "FR24账号"
   },
   "register": {
     "title": "创建账号",

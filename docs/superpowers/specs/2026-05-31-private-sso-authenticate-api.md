@@ -1,4 +1,4 @@
-# Private SSO /api/sso/authenticate 接口对接文档
+# Private SSO /api/sso/authenticate.do 接口对接文档
 
 ## 背景
 
@@ -12,7 +12,7 @@ SkillHub 私有化部署需要与企业 SSO 系统对接，实现统一登录。
 
 ## 接口定义
 
-### POST /api/sso/authenticate
+### POST /api/sso/authenticate.do
 
 #### 请求
 
@@ -174,7 +174,7 @@ SSO 团队完成接口开发后，可使用以下命令验证：
 ### 成功场景
 
 ```bash
-curl -X POST https://sso.company.com/api/sso/authenticate \
+curl -X POST https://sso.company.com/api/sso/authenticate.do \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser",
@@ -197,7 +197,7 @@ curl -X POST https://sso.company.com/api/sso/authenticate \
 ### 密码错误
 
 ```bash
-curl -X POST https://sso.company.com/api/sso/authenticate \
+curl -X POST https://sso.company.com/api/sso/authenticate.do \
   -H "Content-Type: application/json" \
   -d '{"username": "testuser", "password": "wrong"}'
 ```
@@ -224,7 +224,7 @@ HTTP/1.1 403 Forbidden
 
 ## 联调清单
 
-- [ ] SSO 侧提供 `/api/sso/authenticate` 端点
+- [ ] SSO 侧提供 `/api/sso/authenticate.do` 端点
 - [ ] 确认 `uid` 字段使用 SSO 侧哪个字段映射
 - [ ] 确认 SM2 公钥（SkillHub 前后端配置同一公钥，SSO 侧持有对应私钥）
 - [ ] 确认 2FA 流程：是否复用短信验证码，还是使用其他 2FA 方案（如 TOTP）

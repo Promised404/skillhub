@@ -8,6 +8,9 @@ import { NotificationBell } from '@/features/notification/notification-bell'
 import { getAppHeaderClassName } from './layout-header-style'
 import { getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
 
+const COMPANY_LOGO_URL = 'https://www.flightroutes24.com/images/logo-white.eea24fa8.svg'
+const COMPANY_HOME_URL = 'https://www.flightroutes24.com/'
+
 /**
  * Application shell shared by all routed pages.
  *
@@ -72,9 +75,24 @@ export function Layout() {
 
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
-        <Link to="/" className="text-xl font-semibold tracking-tight text-brand-gradient">
-          SkillHub
-        </Link>
+        <div className="inline-flex items-center gap-2">
+          <a
+            href={COMPANY_HOME_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Flightroutes24"
+            className="inline-flex h-7 w-24 shrink-0 items-center justify-center rounded-lg bg-brand-gradient px-2 shadow-sm sm:h-8 sm:w-32"
+          >
+            <img
+              src={COMPANY_LOGO_URL}
+              alt="Flightroutes24"
+              className="h-3 w-full object-contain sm:h-4"
+            />
+          </a>
+          <Link to="/" className="hidden text-xl font-semibold tracking-tight text-brand-gradient min-[420px]:inline">
+            SkillHub
+          </Link>
+        </div>
 
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-normal" style={{ color: 'hsl(var(--text-secondary))' }}>
           {navItems.map((item) => {
@@ -140,7 +158,7 @@ export function Layout() {
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-sm bg-brand-gradient">
                   S
                 </div>
-                <span className="text-lg font-bold text-brand-gradient">SkillHub</span>
+                <span className="text-lg font-bold text-brand-gradient">FR24 SkillHub</span>
               </div>
               <p className="text-sm max-w-xs" style={{ color: 'hsl(var(--text-secondary))' }}>
                 {t('layout.footerDescription')}
