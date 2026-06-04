@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { encryptPassword } from './use-sm2-encrypt'
-import md5 from 'js-md5'
+import { md5 } from 'js-md5'
 
 describe('encryptPassword', () => {
   it('should return encrypted string with 04 prefix', () => {
@@ -18,10 +18,7 @@ describe('encryptPassword', () => {
     vi.useFakeTimers()
     const ts = 1748692800000
     vi.setSystemTime(new Date(ts))
-    const publicKey = '04' + 'b'.repeat(128)
     const expectedPlaintext = `${md5('mypassword')}-${ts}`
-    // SM2 encryption is non-deterministic, so we verify the plaintext format
-    // by checking that md5 is applied: md5('mypassword') = a3eafec3...
     expect(expectedPlaintext).toMatch(/^[a-f0-9]{32}-\d+$/)
     vi.useRealTimers()
   })

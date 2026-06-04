@@ -1,5 +1,5 @@
-import md5 from 'js-md5'
 import { sm2 } from 'sm-crypto'
+import { md5 } from 'js-md5'
 
 /**
  * Encrypts a password with SM2 public key for secure transmission.
