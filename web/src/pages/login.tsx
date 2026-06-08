@@ -3,19 +3,17 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { getDirectAuthRuntimeConfig } from '@/api/client'
-import { LoginButton } from '@/features/auth/login-button'
 import { SessionBootstrapEntry } from '@/features/auth/session-bootstrap-entry'
 import { useAuthMethods } from '@/features/auth/use-auth-methods'
 import { usePasswordLogin } from '@/features/auth/use-password-login'
 import { getPrivateSsoRuntimeConfig } from '@/features/auth/use-private-sso-config'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 /**
  * Authentication entry page.
  *
- * It combines password login, OAuth entry points, and optional session-bootstrap support while
+ * It combines FR24 account login and optional session-bootstrap support while
  * preserving the route the user originally intended to visit.
  */
 export function LoginPage() {
@@ -87,117 +85,99 @@ export function LoginPage() {
               onAuthenticated={() => navigate({ to: returnTo })}
             />
 
-            <Tabs defaultValue="password" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="password">
-                  {directAuthConfig.enabled ? t('login.tabEnterprise') : t('login.tabPassword')}
-                </TabsTrigger>
-                <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="password">
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="username">{t('login.username')}</label>
-                    <Input
-                      id="username"
-                      autoComplete="username"
-                      value={username}
-                      onChange={(event) => {
-                        setUsername(event.target.value)
-                        if (fieldErrors.username) {
-                          setFieldErrors((current) => ({ ...current, username: undefined }))
-                        }
-                      }}
-                      placeholder={t('login.usernamePlaceholder')}
-                      aria-invalid={fieldErrors.username ? 'true' : 'false'}
-                    />
-                    {fieldErrors.username ? (
-                      <p className="text-sm text-red-600">{fieldErrors.username}</p>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(event) => {
-                          setPassword(event.target.value)
-                          if (fieldErrors.password) {
-                            setFieldErrors((current) => ({ ...current, password: undefined }))
-                          }
-                        }}
-                        placeholder={t('login.passwordPlaceholder')}
-                        className="pr-12"
-                        aria-invalid={fieldErrors.password ? 'true' : 'false'}
-                      />
-                      <button
-                        type="button"
-                        aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
-                        aria-pressed={showPassword}
-                        onClick={() => setShowPassword((current) => !current)}
-                        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {fieldErrors.password ? (
-                      <p className="text-sm text-red-600">{fieldErrors.password}</p>
-                    ) : null}
-                  </div>
-                  {privateSsoConfig.twoFactorEnabled && directAuthConfig.enabled ? (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium" htmlFor="twoFactorCode">{t('login.twoFactorCode')}</label>
-                      <Input
-                        id="twoFactorCode"
-                        autoComplete="one-time-code"
-                        value={twoFactorCode}
-                        onChange={(event) => setTwoFactorCode(event.target.value)}
-                        placeholder={t('login.twoFactorPlaceholder')}
-                      />
-                    </div>
-                  ) : null}
-                  {loginMutation.error ? (
-                    <p className="text-sm text-red-600">{loginMutation.error.message}</p>
-                  ) : null}
-                  <Button className="w-full" disabled={loginMutation.isPending} type="submit">
-                    {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
-                  </Button>
-                  <p className="text-center text-sm">
-                    {!directAuthConfig.enabled ? (
-                      <Link to="/reset-password" className="font-medium text-primary hover:underline">
-                        {t('login.forgotPassword')}
-                      </Link>
-                    ) : null}
-                  </p>
-                  <p className="text-center text-sm text-muted-foreground">
-                    {!directAuthConfig.enabled ? (
-                      <>
-                        {t('login.noAccount')}
-                        {' '}
-                        <Link
-                          to="/register"
-                          search={{ returnTo }}
-                          className="font-medium text-primary hover:underline"
-                        >
-                          {t('login.register')}
-                        </Link>
-                      </>
-                    ) : null}
-                  </p>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="oauth" className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {t('login.oauthHint')}
-                </p>
-                <LoginButton returnTo={returnTo} />
-              </TabsContent>
-            </Tabs>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="username">{t('login.username')}</label>
+                <Input
+                  id="username"
+                  autoComplete="username"
+                  value={username}
+                  onChange={(event) => {
+                    setUsername(event.target.value)
+                    if (fieldErrors.username) {
+                      setFieldErrors((current) => ({ ...current, username: undefined }))
+                    }
+                  }}
+                  placeholder={t('login.usernamePlaceholder')}
+                  aria-invalid={fieldErrors.username ? 'true' : 'false'}
+                />
+                {fieldErrors.username ? (
+                  <p className="text-sm text-red-600">{fieldErrors.username}</p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value)
+                      if (fieldErrors.password) {
+                        setFieldErrors((current) => ({ ...current, password: undefined }))
+                      }
+                    }}
+                    placeholder={t('login.passwordPlaceholder')}
+                    className="pr-12"
+                    aria-invalid={fieldErrors.password ? 'true' : 'false'}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {fieldErrors.password ? (
+                  <p className="text-sm text-red-600">{fieldErrors.password}</p>
+                ) : null}
+              </div>
+              {privateSsoConfig.twoFactorEnabled && directAuthConfig.enabled ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="twoFactorCode">{t('login.twoFactorCode')}</label>
+                  <Input
+                    id="twoFactorCode"
+                    autoComplete="one-time-code"
+                    value={twoFactorCode}
+                    onChange={(event) => setTwoFactorCode(event.target.value)}
+                    placeholder={t('login.twoFactorPlaceholder')}
+                  />
+                </div>
+              ) : null}
+              {loginMutation.error ? (
+                <p className="text-sm text-red-600">{loginMutation.error.message}</p>
+              ) : null}
+              <Button className="w-full" disabled={loginMutation.isPending} type="submit">
+                {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
+              </Button>
+              <p className="text-center text-sm">
+                {!directAuthConfig.enabled ? (
+                  <Link to="/reset-password" className="font-medium text-primary hover:underline">
+                    {t('login.forgotPassword')}
+                  </Link>
+                ) : null}
+              </p>
+              <p className="text-center text-sm text-muted-foreground">
+                {!directAuthConfig.enabled ? (
+                  <>
+                    {t('login.noAccount')}
+                    {' '}
+                    <Link
+                      to="/register"
+                      search={{ returnTo }}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {t('login.register')}
+                    </Link>
+                  </>
+                ) : null}
+              </p>
+            </form>
           </div>
         </div>
 

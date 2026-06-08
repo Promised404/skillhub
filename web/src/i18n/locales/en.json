@@ -201,9 +201,8 @@
   },
   "login": {
     "title": "Login to FR24 SkillHub",
-    "subtitle": "Choose a method to continue",
+    "subtitle": "Sign in with your FR24 account to continue",
     "tabPassword": "Password",
-    "tabOAuth": "OAuth",
     "username": "Username",
     "password": "Password",
     "usernamePlaceholder": "Enter username",
@@ -217,7 +216,6 @@
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "register": "Sign up now",
-    "oauthHint": "After OAuth authentication, you will be automatically redirected back to this site.",
     "passwordCompatHint": "This deployment has the password compatibility layer enabled. The form will route to {{name}} instead of the fixed local account endpoint.",
     "enterpriseSsoTitle": "Enterprise SSO",
     "enterpriseSsoHint": "This deployment has the compatibility layer enabled. If your browser already has a {{name}} session, you can try establishing a SkillHub session directly.",
@@ -400,7 +398,7 @@
     "publishSkill": "Publish Skill"
   },
   "myNamespaces": {
-    "title": "My Namespaces",
+    "title": "My Teams",
     "subtitle": "Manage your namespaces and teams",
     "create": "Create Namespace",
     "creating": "Creating...",
@@ -1286,7 +1284,7 @@
     "menu": {
       "dashboard": "Dashboard",
       "mySkills": "My Skills",
-      "myNamespaces": "My Namespaces",
+      "myNamespaces": "My Teams",
       "governance": "Governance Center",
       "stars": "Starred",
       "subscriptions": "My Subscriptions",

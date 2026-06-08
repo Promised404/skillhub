@@ -201,9 +201,8 @@
   },
   "login": {
     "title": "登录 FR24 SkillHub",
-    "subtitle": "选择一个方式登录以继续",
+    "subtitle": "使用 FR24 账号登录以继续",
     "tabPassword": "账号密码",
-    "tabOAuth": "OAuth",
     "username": "用户名",
     "password": "密码",
     "usernamePlaceholder": "输入用户名",
@@ -217,7 +216,6 @@
     "forgotPassword": "忘记密码？",
     "noAccount": "还没有账号？",
     "register": "立即注册",
-    "oauthHint": "使用 OAuth 登录时，认证完成后会自动返回当前站点。",
     "passwordCompatHint": "当前部署已启用账号密码兼容接入层。表单将路由到 {{name}}，而不是固定使用本地账号接口。",
     "enterpriseSsoTitle": "企业单点登录",
     "enterpriseSsoHint": "当前部署已启用兼容接入层。若浏览器中已存在 {{name}} 会话，可直接尝试建立 SkillHub 登录态。",
@@ -400,7 +398,7 @@
     "publishSkill": "发布技能"
   },
   "myNamespaces": {
-    "title": "我的命名空间",
+    "title": "我的团队",
     "subtitle": "管理你的命名空间和团队",
     "create": "创建命名空间",
     "creating": "创建中...",
@@ -1287,7 +1285,7 @@
     "menu": {
       "dashboard": "控制台",
       "mySkills": "我的技能",
-      "myNamespaces": "我的命名空间",
+      "myNamespaces": "我的团队",
       "governance": "治理中心",
       "stars": "我的收藏",
       "subscriptions": "我的订阅",
