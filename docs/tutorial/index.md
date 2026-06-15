@@ -14,6 +14,6 @@ title: FR24 SkillHub 使用教程
 | 你的情况 | 推荐 |
 |---------|------|
 | 我只想快速发布/搜索一个 Skill | 快速上手 |
-| 我想知道 OpenClaw 怎么操作 SkillHub | 快速上手 |
+| 我想知道 OpenClaw / WorkBuddy 怎么操作 SkillHub | 快速上手 |
 | 我是团队管理员，需要管人和管 Skill | 完整指南 |
 | 我遇到了问题想查具体操作 | 完整指南 |

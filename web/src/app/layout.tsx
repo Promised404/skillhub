@@ -48,12 +48,14 @@ export function Layout() {
     to: string
     exact?: boolean
     auth?: boolean
+    href?: string
   }> = [
     { label: t('nav.landing'), to: '/', exact: true },
     { label: t('nav.publish'), to: '/dashboard/publish', auth: true },
     { label: t('nav.search'), to: '/search' },
     { label: t('nav.dashboard'), to: '/dashboard', auth: true },
     { label: t('nav.mySkills'), to: '/dashboard/skills', auth: true },
+    { label: t('nav.tutorial'), href: 'https://skillhub.fr24.ai/tutorial/' },
   ]
 
   const isActive = (to: string, exact?: boolean) => {
@@ -97,12 +99,27 @@ export function Layout() {
         <nav className="hidden md:flex items-center gap-8 text-[15px] font-normal" style={{ color: 'hsl(var(--text-secondary))' }}>
           {navItems.map((item) => {
             if (item.auth && !user) return null
-            const active = isActive(item.to, item.exact)
+
+            if (item.href) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity duration-150"
+                >
+                  {item.label}
+                </a>
+              )
+            }
+
+            const active = isActive(item.to!, item.exact)
 
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to!}
                 className={
                   active
                     ? 'px-4 py-1.5 rounded-full bg-brand-gradient text-white shadow-sm'
@@ -184,6 +201,17 @@ export function Layout() {
                     >
                       {t('nav.search')}
                     </Link>
+                  </li>
+                  <li>
+                    <a
+                      href="https://skillhub.fr24.ai/tutorial/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                      style={{ color: 'hsl(var(--text-secondary))' }}
+                    >
+                      {t('nav.tutorial')}
+                    </a>
                   </li>
                   <li>
                     <Link to="/dashboard" className="hover:opacity-80 transition-opacity" style={{ color: 'hsl(var(--text-secondary))' }}>

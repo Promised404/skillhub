@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/features/auth/use-auth'
 import type { SkillSummary } from '@/api/types'
 import { useMySkills } from '@/shared/hooks/use-user-queries'
+import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
 import { canViewGovernanceCenter } from '@/shared/lib/governance-access'
+import { canAccessReviewCenter } from '@/features/review/review-paths'
 import { getHeadlineVersion } from '@/shared/lib/skill-lifecycle'
 import { TokenList } from '@/features/token/token-list'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -23,6 +25,8 @@ export function DashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const governanceVisible = canViewGovernanceCenter(user?.platformRoles)
+  const { data: namespaces } = useMyNamespaces()
+  const reviewVisible = canAccessReviewCenter(user?.platformRoles, namespaces)
   const { data: skillPage, isLoading: isLoadingSkills } = useMySkills({ page: 0, size: skillPreviewPageSize })
   const skillPreview = limitPreviewItems<SkillSummary>(skillPage?.items ?? [], DASHBOARD_PREVIEW_LIMIT)
 
@@ -77,7 +81,27 @@ export function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className={`grid grid-cols-1 gap-4 ${governanceVisible ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 lg:grid-cols-6">
+        <Card className="p-5">
+          <div className="text-sm text-muted-foreground">{t('dashboard.publishSkill')}</div>
+          <Link to="/dashboard/publish" className="mt-2 inline-block font-semibold text-primary hover:underline">
+            {t('dashboard.goPublish')}
+          </Link>
+        </Card>
+        <Card className="p-5">
+          <div className="text-sm text-muted-foreground">{t('dashboard.mySkillsTitle')}</div>
+          <Link to="/dashboard/skills" className="mt-2 inline-block font-semibold text-primary hover:underline">
+            {t('dashboard.openMySkills')}
+          </Link>
+        </Card>
+        {reviewVisible ? (
+          <Card className="p-5">
+            <div className="text-sm text-muted-foreground">{t('dashboard.reviewCenter')}</div>
+            <Link to="/dashboard/reviews" className="mt-2 inline-block font-semibold text-primary hover:underline">
+              {t('dashboard.viewReviews')}
+            </Link>
+          </Card>
+        ) : null}
         <Card className="p-5">
           <div className="text-sm text-muted-foreground">{t('dashboard.starsAndRatings')}</div>
           <Link to="/dashboard/stars" className="mt-2 inline-block font-semibold text-primary hover:underline">
@@ -88,12 +112,6 @@ export function DashboardPage() {
           <div className="text-sm text-muted-foreground">{t('dashboard.subscriptions')}</div>
           <Link to="/dashboard/subscriptions" className="mt-2 inline-block font-semibold text-primary hover:underline">
             {t('dashboard.viewSubscriptions')}
-          </Link>
-        </Card>
-        <Card className="p-5">
-          <div className="text-sm text-muted-foreground">{t('dashboard.mySkillsTitle')}</div>
-          <Link to="/dashboard/skills" className="mt-2 inline-block font-semibold text-primary hover:underline">
-            {t('dashboard.openMySkills')}
           </Link>
         </Card>
         <Card className="p-5">
