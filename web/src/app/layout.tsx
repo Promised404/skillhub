@@ -45,7 +45,7 @@ export function Layout() {
 
   const navItems: Array<{
     label: string
-    to: string
+    to?: string
     exact?: boolean
     auth?: boolean
     href?: string
